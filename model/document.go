@@ -23,6 +23,11 @@ func (r *RawRenderer) Name() string {
 }
 
 func (r *RawRenderer) Render(d *data.Document) string {
+	c := d.Contents()
+	if c == nil {
+		return ""
+	}
+
 	return string(d.Contents())
 }
 

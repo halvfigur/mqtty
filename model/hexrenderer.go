@@ -24,9 +24,10 @@ func (r *HexRenderer) Name() string {
 }
 
 func (r *HexRenderer) Render(doc *data.Document) string {
-	sb := new(strings.Builder)
-
 	c := doc.Contents()
+	if c == nil {
+		return ""
+	}
 
 	min := func(a, b int) int {
 		if a < b {
@@ -47,6 +48,7 @@ func (r *HexRenderer) Render(doc *data.Document) string {
 		[]byte(""),
 	}
 
+	sb := new(strings.Builder)
 	for i := 0; i < len(c); i += 8 {
 		if i > 0 {
 			sb.WriteString("\n")

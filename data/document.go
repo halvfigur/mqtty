@@ -12,17 +12,23 @@ type Document struct {
 }
 
 func NewDocument(r io.Reader) (*Document, error) {
-	ts := time.Now()
-
 	contents, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
+	return NewDocumentBytes(contents), nil
+}
+
+func NewDocumentBytes(contents []byte) *Document {
 	return &Document{
-		ts:       ts,
+		ts:       time.Now(),
 		contents: contents,
-	}, nil
+	}
+}
+
+func NewDocumentEmpty() *Document {
+	return new(Document)
 }
 
 func (d *Document) Contents() []byte {
