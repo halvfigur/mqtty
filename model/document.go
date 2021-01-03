@@ -5,46 +5,19 @@ import (
 )
 
 type (
-	Renderer interface {
-		Name() string
-		Render(doc *data.Document) string
-	}
-
-	RawRenderer struct{}
-
 	Document struct {
-		doc      *data.Document
-		renderer Renderer
+		doc *data.Document
 	}
 )
 
-func (r *RawRenderer) Name() string {
-	return "Raw"
-}
-
-func (r *RawRenderer) Render(d *data.Document) string {
-	c := d.Contents()
-	if c == nil {
-		return ""
-	}
-
-	return string(d.Contents())
-}
-
 func NewDocument() *Document {
-	return &Document{
-		renderer: new(RawRenderer),
-	}
+	return &Document{}
 }
 
 func (d *Document) SetDocument(doc *data.Document) {
 	d.doc = doc
 }
 
-func (d *Document) SetRenderer(r Renderer) {
-	d.renderer = r
-}
-
 func (d *Document) Contents() []byte {
-	return []byte(d.renderer.Render(d.doc))
+	return d.doc.Contents()
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/halvfigur/mqtty/data"
-	"github.com/halvfigur/mqtty/model"
+	"github.com/halvfigur/mqtty/view"
 )
 
 func ui(incoming <-chan *mqttMessage) {
@@ -29,9 +29,9 @@ func ui(incoming <-chan *mqttMessage) {
 	topicList.AddItem("iotea/discovery", "", 0, nil)
 
 	/* Renderers list */
-	renderers := []model.Renderer{
-		new(model.RawRenderer),
-		new(model.HexRenderer),
+	renderers := []view.Renderer{
+		new(view.RawRenderer),
+		new(view.HexRenderer),
 	}
 
 	renderersList := tview.NewList()
@@ -39,7 +39,7 @@ func ui(incoming <-chan *mqttMessage) {
 	renderersList.ShowSecondaryText(false)
 	for _, r := range renderers {
 		renderersList.AddItem(r.Name(), "", 0,
-			func(r model.Renderer) func() {
+			func(r view.Renderer) func() {
 				return func() {
 					docCtrl.SetRenderer(r)
 					debugView.SetText(fmt.Sprint("Renderer: ", r.Name()))

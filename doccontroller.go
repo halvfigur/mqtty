@@ -24,11 +24,13 @@ func (c *DocumentController) SetDocument(d *data.Document) {
 	c.model.SetDocument(d)
 	c.view.SetDocument(c.model)
 	c.view.Refresh()
+	c.view.ScrollToBeginning()
 }
 
-func (c *DocumentController) SetRenderer(r model.Renderer) {
-	c.model.SetRenderer(r)
+func (c *DocumentController) SetRenderer(r view.Renderer) {
+	c.view.SetRenderer(r)
 	c.view.Refresh()
+	c.view.ScrollToBeginning()
 }
 
 func (c *DocumentController) View() *view.DocumentView {
