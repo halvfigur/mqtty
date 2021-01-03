@@ -31,7 +31,7 @@ func ui(incoming <-chan *mqttMessage) {
 	/* Renderers list */
 	renderers := []view.Renderer{
 		new(view.RawRenderer),
-		new(view.HexRenderer),
+		view.NewHexRenderer(),
 	}
 
 	renderersList := tview.NewList()

@@ -9,7 +9,7 @@ import (
 type (
 	Renderer interface {
 		Name() string
-		Render(doc *model.Document, tv *tview.TextView)
+		Render(doc *model.Document) ([]byte, bool)
 	}
 
 	RawRenderer struct{}
@@ -26,13 +26,14 @@ func (r *RawRenderer) Name() string {
 	return "Raw"
 }
 
-func (r *RawRenderer) Render(d *model.Document, tv *tview.TextView) {
+func (r *RawRenderer) Render(d *model.Document) ([]byte, bool) {
 	c := d.Contents()
 	if c == nil {
-		return
+		return nil, false
 	}
 
-	tv.Write(d.Contents())
+	//tv.Write(d.Contents())
+	return d.Contents(), false
 }
 
 func NewDocumentView() *DocumentView {
@@ -42,7 +43,6 @@ func NewDocumentView() *DocumentView {
 	}
 
 	d.TextView.SetTitle("Document").SetBorder(true)
-	d.TextView.SetDynamicColors(true)
 	return d
 }
 
@@ -63,5 +63,8 @@ func (v *DocumentView) Refresh() {
 		return
 	}
 
-	v.renderer.Render(v.doc, v.TextView)
+	text, colorized := v.renderer.Render(v.doc)
+
+	v.TextView.SetDynamicColors(colorized)
+	v.Write(text)
 }
