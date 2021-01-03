@@ -20,7 +20,7 @@ type HexRenderer struct {
 }
 
 func (r *HexRenderer) Name() string {
-	return "Raw"
+	return "Hex"
 }
 
 func (r *HexRenderer) Render(doc *data.Document) string {

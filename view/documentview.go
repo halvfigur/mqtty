@@ -17,11 +17,15 @@ func NewDocumentView() *DocumentView {
 		TextView: tview.NewTextView(),
 	}
 
-	d.TextView.SetTitle("Document")
+	d.TextView.SetTitle("Document").SetBorder(true)
 	return d
 }
 
 func (v *DocumentView) SetDocument(d *model.Document) {
 	v.doc = d
-	v.TextView.Write(d.Contents())
+}
+
+func (v *DocumentView) Refresh() {
+	v.TextView.Clear()
+	v.TextView.Write(v.doc.Contents())
 }

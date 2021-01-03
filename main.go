@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 
 	"github.com/gdamore/tcell/v2"
@@ -9,10 +10,9 @@ import (
 
 	"github.com/halvfigur/mqtty/data"
 	"github.com/halvfigur/mqtty/model"
-	"github.com/halvfigur/mqtty/view"
 )
 
-func incomingPage() tview.Primitive {
+func main() {
 	buf := bytes.NewBufferString(`
 	{
 		"alpha": {
@@ -25,65 +25,70 @@ func incomingPage() tview.Primitive {
 
 	// Document data
 	d, err := data.NewDocument(buf)
+
 	if err != nil {
 		log.Fatal("Failed to read document")
 	}
-
-	// Document model
-	m := model.NewDocument()
-	m.SetRenderer(new(model.HexRenderer))
-	m.SetDocument(d)
-
-	// Document view
-	v := view.NewDocumentView()
-	v.SetDocument(m)
-
-	// Root window layout
-	flex := tview.NewFlex().AddItem(v.SetBorder(true), 0, 1, false)
-
-	return flex
-}
-
-func main() {
 	app := tview.NewApplication()
+	debugView := tview.NewTextView()
 
-	pages := tview.NewPages()
-	pages.AddPage("incoming-page", incomingPage(), true)
-	pages.AddPage("quit-modal", tview.NewModal().
-		SetText("Do you want to quit the application?").
-		AddButtons([]string{"Quit", "Cancel"}).
-		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			if buttonLabel == "Quit" {
-				app.Stop()
-			}
-			if buttonLabel == "Cancel" {
-				pages.SwitchToPage("incoming-page")
-			}
-		}), false)
+	docCtrl := NewDocumentController()
+	docCtrl.SetDocument(d)
 
-	app.SetRoot(pages, true)
+	/* Topic list */
+	topicList := tview.NewList()
+	topicList.SetBorder(true).SetTitle("Topics")
+	topicList.ShowSecondaryText(false)
+	topicList.AddItem("iotea/ingestion/events", "", 0, nil)
+	topicList.AddItem("iotea/discovery", "", 0, nil)
 
+	/* Renderers list */
+	renderers := []model.Renderer{
+		new(model.RawRenderer),
+		new(model.HexRenderer),
+	}
+
+	renderersList := tview.NewList()
+	renderersList.SetBorder(true).SetTitle("Renderers")
+	renderersList.ShowSecondaryText(false)
+	for _, r := range renderers {
+		renderersList.AddItem(r.Name(), "", 0,
+			func(r model.Renderer) func() {
+				return func() {
+					docCtrl.SetRenderer(r)
+					debugView.SetText(fmt.Sprint("Renderer: ", r.Name()))
+				}
+			}(r))
+	}
+
+	flow := tview.NewFlex()
+	flow.AddItem(topicList, 0, 1, true)
+	flow.AddItem(docCtrl.View(), 0, 3, false)
+	flow.AddItem(renderersList, 0, 1, false)
+
+	debug := tview.NewFlex()
+	debug.SetDirection(tview.FlexRow)
+	debug.AddItem(flow, 0, 1, true)
+	debug.AddItem(debugView, 1, 0, true)
+
+	fc := NewFocusChain(topicList, docCtrl.View(), renderersList)
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() != 'c' {
+		debugView.SetText(event.Name())
+
+		switch event.Key() {
+		case tcell.KeyTab:
+			app.SetFocus(fc.Next())
+		case tcell.KeyBacktab:
+			app.SetFocus(fc.Prev())
+		default:
 			return event
 		}
 
-		modal := tview.NewModal().SetText("Do you want to quit the application?").
-			AddButtons([]string{"Quit", "Cancel"}).
-			SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-				if buttonLabel == "Quit" {
-					app.Stop()
-				}
-				if buttonLabel == "Cancel" {
-				}
-			})
-
-		app.SetRoot("quit-page", true)
-
-		// Returning nil prevents the event to stop further event processing
 		return nil
 	})
-	if err := app..Run(); err != nil {
+
+	app.SetRoot(debug, true)
+	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
