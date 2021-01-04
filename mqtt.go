@@ -60,6 +60,7 @@ func (c *mqttClient) processPublished() {
 }
 
 func (c *mqttClient) close() error {
+	c.c.Disconnect(1000)
 	close(c.done)
 	close(c.incomming)
 	close(c.outgoing)

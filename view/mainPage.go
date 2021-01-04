@@ -93,6 +93,11 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	return p
 }
 
+func (p *MainPage) Focus(delegate func(p tview.Primitive)) {
+	p.Flex.SetFullScreen(true)
+	delegate(p.Flex)
+}
+
 func (p *MainPage) AddTopic(t string) {
 	const (
 		subStringMatch  = ""
