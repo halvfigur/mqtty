@@ -13,6 +13,8 @@ type (
 		OnTopicSelected(t string)
 		OnRendererSelected(r Renderer)
 		OnChangeFocus(p tview.Primitive)
+		OnNextDocument()
+		OnPrevDocument()
 	}
 
 	MainPage struct {
@@ -36,11 +38,9 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 
 	debugView := tview.NewTextView()
 
-	/* Topic list */
+	/* Topics list */
 	p.topics.SetBorder(true).SetTitle("Topics")
 	p.topics.ShowSecondaryText(false)
-	p.topics.AddItem("iotea/ingestion/events", "", 0, nil)
-	p.topics.AddItem("iotea/discovery", "", 0, nil)
 
 	/* Renderers list */
 	renderers := []Renderer{
@@ -79,6 +79,10 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 			p.ctrl.OnChangeFocus(fc.Next())
 		case tcell.KeyBacktab:
 			p.ctrl.OnChangeFocus(fc.Prev())
+		case tcell.KeyRight:
+			p.ctrl.OnNextDocument()
+		case tcell.KeyLeft:
+			p.ctrl.OnPrevDocument()
 		default:
 			return event
 		}
@@ -87,6 +91,35 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	})
 
 	return p
+}
+
+func (p *MainPage) AddTopic(t string) {
+	const (
+		subStringMatch  = ""
+		mustContainBoth = false
+		ignoreCase      = false
+	)
+
+	if p.topics.FindItems(t, subStringMatch, mustContainBoth, ignoreCase) != nil {
+		return
+	}
+
+	const (
+		secondaryText = ""
+		shortCut      = 0
+	)
+
+	p.topics.AddItem(t, secondaryText, shortCut, func() {
+		p.ctrl.OnTopicSelected(t)
+	})
+}
+
+func (p *MainPage) SetDocumentTitle(title string) {
+	p.doc.SetTitle(title)
+}
+
+func (p *MainPage) SetTopicsTitle(title string) {
+	p.topics.SetTitle(title)
 }
 
 func (p *MainPage) SetDocument(d *model.Document) {
