@@ -35,6 +35,7 @@ func newMqttClient() *mqttClient {
 	c := &mqttClient{
 		incomming: make(chan *mqttMessage, 32),
 		outgoing:  make(chan *mqttMessage, 32),
+		done:      make(chan struct{}),
 	}
 
 	go c.processPublished()
@@ -60,6 +61,8 @@ func (c *mqttClient) processPublished() {
 
 func (c *mqttClient) close() error {
 	close(c.done)
+	close(c.incomming)
+	close(c.outgoing)
 	return nil
 }
 

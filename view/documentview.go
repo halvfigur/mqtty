@@ -32,7 +32,6 @@ func (r *RawRenderer) Render(d *model.Document) ([]byte, bool) {
 		return nil, false
 	}
 
-	//tv.Write(d.Contents())
 	return d.Contents(), false
 }
 
