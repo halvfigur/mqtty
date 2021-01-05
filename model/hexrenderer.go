@@ -1,10 +1,8 @@
-package view
+package model
 
 import (
 	"fmt"
 	"strings"
-
-	"github.com/halvfigur/mqtty/model"
 )
 
 func hex(b byte) []byte {
@@ -39,9 +37,8 @@ func (r *HexRenderer) Name() string {
 	return "Hex"
 }
 
-func (r *HexRenderer) Render(doc *model.Document) ([]byte, bool) {
-	c := doc.Contents()
-	if c == nil {
+func (r *HexRenderer) Render(data []byte) ([]byte, bool) {
+	if data == nil {
 		return nil, false
 	}
 
@@ -75,21 +72,21 @@ func (r *HexRenderer) Render(doc *model.Document) ([]byte, bool) {
 	}
 
 	r.sb.Write([]byte("[blue]0000>[-] "))
-	for i := 0; i < len(c); i += len(padding) {
+	for i := 0; i < len(data); i += len(padding) {
 		if i > 0 {
 			r.sb.Write([]byte("\n"))
 			r.sb.Write([]byte(fmt.Sprintf("[blue]%04x>[-] ", i)))
 		}
 
-		l := min(len(padding), len(c)-i)
+		l := min(len(padding), len(data)-i)
 
 		for j := 0; j < l; j++ {
-			r.sb.Write(hex(c[i+j]))
+			r.sb.Write(hex(data[i+j]))
 			r.sb.Write(padding[j])
 		}
 
 		for j := 0; j < l; j++ {
-			r.sb.WriteByte(toPrintable(c[i+j]))
+			r.sb.WriteByte(toPrintable(data[i+j]))
 			r.sb.Write(padding[j][0 : len(padding[j])-1])
 		}
 	}

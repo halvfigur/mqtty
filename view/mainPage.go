@@ -11,10 +11,11 @@ import (
 type (
 	MainPageController interface {
 		OnTopicSelected(t string)
-		OnRendererSelected(r Renderer)
 		OnChangeFocus(p tview.Primitive)
 		OnNextDocument()
 		OnPrevDocument()
+		OnSubscribe()
+		OnRenderer()
 	}
 
 	MainPage struct {
@@ -36,42 +37,19 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 		renderers: tview.NewList(),
 	}
 
-	debugView := tview.NewTextView()
-
 	/* Topics list */
-	p.topics.SetBorder(true).SetTitle("Topics")
+	p.topics.SetBorder(true).SetTitle("[blue]Topics[-]")
 	p.topics.ShowSecondaryText(false)
 
-	/* Renderers list */
-	renderers := []Renderer{
-		new(RawRenderer),
-		NewHexRenderer(),
-	}
-
-	p.renderers.SetBorder(true).SetTitle("Renderers")
-	p.renderers.ShowSecondaryText(false)
-	for _, r := range renderers {
-		p.renderers.AddItem(r.Name(), "", 0,
-			func(r Renderer) func() {
-				return func() {
-					p.ctrl.OnRendererSelected(r)
-					debugView.SetText(fmt.Sprint("Renderer: ", r.Name()))
-				}
-			}(r))
-	}
-
-	p.Flex.SetDirection(tview.FlexColumn)
+	p.Flex.SetDirection(tview.FlexRow)
 	p.Flex.AddItem(p.topics, 0, 1, true)
 	p.Flex.AddItem(p.doc, 0, 3, false)
-	p.Flex.AddItem(p.renderers, 0, 1, false)
+	p.Flex.AddItem(tview.NewTextView().
+		SetDynamicColors(true).
+		SetText("[blue](TAB):[-] navigate  [blue](S):[-] subscribe [blue](R):[-] renderer"),
+		1, 0, false)
 
-	/*
-		debug := tview.NewFlex()
-		debug.SetDirection(tview.FlexRow)
-		debug.AddItem(flow, 0, 1, true)
-		debug.AddItem(debugView, 1, 0, true)
-	*/
-	fc := NewFocusChain(p.topics, p.doc, p.renderers)
+	fc := NewFocusChain(p.topics, p.doc)
 
 	p.Flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -83,11 +61,16 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 			p.ctrl.OnNextDocument()
 		case tcell.KeyLeft:
 			p.ctrl.OnPrevDocument()
-		default:
-			return event
 		}
 
-		return nil
+		switch event.Rune() {
+		case 's':
+			p.ctrl.OnSubscribe()
+		case 'r':
+			p.ctrl.OnRenderer()
+		}
+
+		return event
 	})
 
 	return p
@@ -120,21 +103,19 @@ func (p *MainPage) AddTopic(t string) {
 }
 
 func (p *MainPage) SetDocumentTitle(title string) {
-	p.doc.SetTitle(title)
+	p.doc.SetTitle(fmt.Sprint("[blue]", title, "[-]"))
 }
 
 func (p *MainPage) SetTopicsTitle(title string) {
-	p.topics.SetTitle(title)
+	p.topics.SetTitle(fmt.Sprint("[blue]", title, "[-]"))
 }
 
 func (p *MainPage) SetDocument(d *model.Document) {
 	p.doc.SetDocument(d)
 	p.doc.Refresh()
-	p.doc.ScrollToBeginning()
 }
 
-func (p *MainPage) SetRenderer(r Renderer) {
-	p.doc.SetRenderer(r)
+func (p *MainPage) Refresh() {
 	p.doc.Refresh()
 	p.doc.ScrollToBeginning()
 }

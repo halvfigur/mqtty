@@ -1,4 +1,4 @@
-package main
+package control
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	mainPageLabel            = "mainpage"
 	defaultDocumentIndexSize = 32
 )
 
@@ -26,9 +27,10 @@ type (
 	}
 
 	MainPageController struct {
-		app       *tview.Application
+		ctrl      Control
 		view      *view.MainPage
 		model     *model.Document
+		renderer  model.Renderer
 		documents *documentStore
 	}
 )
@@ -113,11 +115,12 @@ func (s *documentStore) Len() int {
 	return len(s.index)
 }
 
-func NewMainPageController(a *tview.Application) *MainPageController {
+func NewMainPageController(ctrl Control) *MainPageController {
 	return &MainPageController{
-		app:       a,
+		ctrl:      ctrl,
 		model:     model.NewDocument(),
 		documents: newDocumentStore(),
+		renderer:  ctrl.Renderers()[0],
 	}
 }
 
@@ -146,14 +149,13 @@ func (c *MainPageController) OnTopicSelected(t string) {
 	c.updateDocumentView()
 }
 
-func (c *MainPageController) OnRendererSelected(r view.Renderer) {
-	if c.view != nil {
-		c.view.SetRenderer(r)
-	}
+func (c *MainPageController) SetRenderer(r model.Renderer) {
+	c.renderer = r
+	c.updateDocumentView()
 }
 
 func (c *MainPageController) OnChangeFocus(p tview.Primitive) {
-	c.app.SetFocus(p)
+	c.ctrl.Focus(p)
 }
 
 func (c *MainPageController) OnNextDocument() {
@@ -168,10 +170,21 @@ func (c *MainPageController) OnPrevDocument() {
 	c.updateDocumentView()
 }
 
+func (c *MainPageController) OnSubscribe() {
+	c.ctrl.OnSubscribe()
+}
+
+func (c *MainPageController) OnRenderer() {
+	c.ctrl.OnRenderer()
+}
+
 func (c *MainPageController) updateDocumentView() {
 	t, index := c.documents.Current()
 	i, d := index.Current()
+
 	c.model.SetDocument(d)
+	c.model.SetRenderer(c.renderer)
+
 	c.view.SetDocument(c.model)
 	c.view.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
 	c.view.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
