@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
 	"github.com/rivo/tview"
 )
@@ -14,23 +15,28 @@ type (
 	}
 )
 
-func NewRendererPage(ctrl RendererPageController) *tview.Form {
+func NewRendererPage(ctrl RendererPageController) *tview.Flex {
 	renderers := ctrl.Renderers()
 
-	options := make([]string, len(renderers))
-	for i, r := range renderers {
-		options[i] = r.Name()
+	d := tview.NewDropDown().SetLabel("[blue]Qos:[-] ")
+	d.SetBorder(true).SetTitle("Select renderer")
+	for _, r := range renderers {
+		d.AddOption(r.Name(), nil)
 	}
 
-	var renderer model.Renderer
-	return tview.NewForm().
-		AddDropDown("Renderer", options, 0, func(opt string, index int) {
-			renderer = renderers[index]
-		}).
-		AddButton("OK", func() {
-			ctrl.Renderer(renderer)
-		}).
-		AddButton("Cancel", func() {
+	d.SetCurrentOption(0)
+	d.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEnter:
+			i, _ := d.GetCurrentOption()
+			ctrl.Renderer(renderers[i])
 			ctrl.Cancel()
-		})
+		case tcell.KeyEscape:
+			ctrl.Cancel()
+		}
+
+		return event
+	})
+
+	return center(d, 1, 1)
 }

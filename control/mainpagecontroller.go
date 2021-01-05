@@ -51,6 +51,9 @@ func (i *documentIndex) Add(d *data.Document) {
 }
 
 func (i *documentIndex) Current() (int, *data.Document) {
+	if i.documents == nil {
+		return -1, data.NewDocumentEmpty()
+	}
 	return i.current, i.documents[i.current]
 }
 
@@ -179,11 +182,16 @@ func (c *MainPageController) OnRenderer() {
 }
 
 func (c *MainPageController) updateDocumentView() {
+	c.model.SetRenderer(c.renderer)
+
 	t, index := c.documents.Current()
+	if index == nil {
+		return
+	}
+
 	i, d := index.Current()
 
 	c.model.SetDocument(d)
-	c.model.SetRenderer(c.renderer)
 
 	c.view.SetDocument(c.model)
 	c.view.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))

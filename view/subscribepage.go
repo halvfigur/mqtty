@@ -25,7 +25,7 @@ type (
 
 func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *SubscriptionFiltersView {
 	filterList := tview.NewList()
-	filterList.SetBorder(true).SetTitle("[blue]Filters[-]")
+	filterList.SetBorder(true).SetTitle("[blue]Current[-]")
 
 	qosOpts := []string{"At most once", "At least once", "Exatly once"}
 
@@ -37,7 +37,9 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 
 	qosDropDown := tview.NewDropDown().
 		SetOptions(qosOpts, nil).
-		SetLabel("[blue]Qos:[-] ")
+		SetLabel("[blue]Qos:[-] ").
+		SetFieldWidth(0).
+		SetCurrentOption(0)
 	qosDropDown.SetBorderPadding(1, 1, 1, 1)
 
 	fc := NewFocusChain(filterInput, qosDropDown)
@@ -64,22 +66,23 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 
 		ctrl.Subscribe(filterInput.GetText(), qos)
 	})
-	addButton.SetBorderPadding(1, 1, 1, 1)
+	addButton.SetBorder(true)
 
 	clearButton := tview.NewButton("Clear").SetSelectedFunc(func() {
 		filterInput.SetText("")
 		qosDropDown.SetCurrentOption(0)
 	})
-	clearButton.SetBorderPadding(1, 1, 1, 1)
+	clearButton.SetBorder(true)
 
 	filterFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
-		AddItem(filterInput, 0, 10, true).
-		AddItem(qosDropDown, 0, 1, false).
+		AddItem(filterInput, 0, 5, true).
+		AddItem(qosDropDown, 0, 5, false).
 		AddItem(addButton, 0, 1, false).
 		AddItem(clearButton, 0, 1, false)
 
 	viewFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+	viewFlex.SetTitle("Filters").SetBorder(true)
 	viewFlex.AddItem(filterFlex, 3, 0, true)
 	viewFlex.AddItem(filterList, 0, 1, false)
 

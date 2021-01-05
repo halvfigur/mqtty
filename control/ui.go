@@ -79,12 +79,9 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 
 	u.pages = tview.NewPages().
 		AddPage(mainPageLabel, mainPage, false, true).
-		//AddPage(subscribePageLabel, subscribePage, true, true).
 		AddPage(rendererPageLabel, rendererPage, true, true).
 		AddPage(subscriptionFiltersViewLabel, filtersPage, true, true).
 		AddAndSwitchToPage(startPageLabel, startPage, true)
-		//AddPage(startPageLabel, startPage, true, true).
-		//AddAndSwitchToPage(subscriptionFiltersViewLabel, filtersPage, true)
 
 	u.ctrl = controllers{
 		start: startCtrl,
@@ -104,12 +101,10 @@ func (u *MqttUI) Connect(host string, port int, username, password string) {
 }
 
 func (u *MqttUI) OnSubscribe() {
-	//u.pages.ShowPage(subscribePageLabel)
 	u.pages.ShowPage(subscriptionFiltersViewLabel)
 }
 
 func (u *MqttUI) Subscribe(topic string, qos network.Qos) {
-	u.pages.HidePage(subscribePageLabel)
 	u.c.Subscribe(topic, qos)
 }
 
@@ -122,7 +117,7 @@ func (u *MqttUI) OnRenderer() {
 }
 
 func (u *MqttUI) Renderer(renderer model.Renderer) {
-	u.pages.HidePage(rendererPageLabel)
+	//u.pages.HidePage(rendererPageLabel)
 	u.ctrl.main.SetRenderer(renderer)
 }
 
