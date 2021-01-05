@@ -15,7 +15,7 @@ type (
 	}
 
 	StartPage struct {
-		*tview.Form
+		*tview.Flex
 		ctrl StartPageController
 	}
 )
@@ -33,7 +33,6 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	)
 
 	p := &StartPage{
-		Form: tview.NewForm(),
 		ctrl: ctrl,
 	}
 
@@ -42,7 +41,8 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	username := ""
 	password := ""
 
-	p.AddInputField(hostLabel, host, textFieldWidth, nil, func(text string) {
+	form := tview.NewForm()
+	form.AddInputField(hostLabel, host, textFieldWidth, nil, func(text string) {
 		host = text
 	})
 
@@ -55,42 +55,43 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 
 		return m
 	}
-	p.AddInputField(portLabel, fmt.Sprintf("%d", defaultPort), numberFieldWidth, validatePort, func(text string) {
+	form.AddInputField(portLabel, fmt.Sprintf("%d", defaultPort), numberFieldWidth, validatePort, func(text string) {
 		port, _ = strconv.Atoi(text)
 	})
 
-	p.AddInputField(usernameLabel, "", textFieldWidth, nil, func(text string) {
+	form.AddInputField(usernameLabel, "", textFieldWidth, nil, func(text string) {
 		username = text
 	})
 
-	p.AddPasswordField(passwordLabel, "", textFieldWidth, '*', func(text string) {
+	form.AddPasswordField(passwordLabel, "", textFieldWidth, '*', func(text string) {
 		password = text
 	})
 
-	p.AddButton("Connect", func() {
+	form.AddButton("Connect", func() {
 		if host == "" {
-			p.SetFocus(p.Form.GetFormItemIndex(hostLabel))
+			form.SetFocus(form.GetFormItemIndex(hostLabel))
 			return
 		}
 		if port == -1 {
-			p.SetFocus(p.Form.GetFormItemIndex(portLabel))
+			form.SetFocus(form.GetFormItemIndex(portLabel))
 			return
 		}
 		if username != "" && password == "" {
-			p.SetFocus(p.Form.GetFormItemIndex(passwordLabel))
+			form.SetFocus(form.GetFormItemIndex(passwordLabel))
 			return
 		}
 		if username == "" && password != "" {
-			p.SetFocus(p.Form.GetFormItemIndex(usernameLabel))
+			form.SetFocus(form.GetFormItemIndex(usernameLabel))
 			return
 		}
 
 		ctrl.OnConnect(host, port, username, password)
 	})
 
-	p.AddButton("Exit", func() {
+	form.AddButton("Exit", func() {
 		ctrl.OnExit()
 	})
 
+	p.Flex = center(form, 1, 1)
 	return p
 }

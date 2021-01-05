@@ -31,10 +31,11 @@ type (
 	}
 
 	controllers struct {
-		start     *StartPageController
-		main      *MainPageController
-		subscribe *SubscribePageController
-		renderer  *RendererPageController
+		start *StartPageController
+		main  *MainPageController
+		//subscribe *SubscribePageController
+		renderer *RendererPageController
+		filters  *SubscriptionFiltersViewController
 	}
 
 	MqttUI struct {
@@ -66,23 +67,31 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 	mainPage := view.NewMainPage(mainCtrl)
 	mainCtrl.SetView(mainPage)
 
-	subscribeCtrl := NewSubscribePageController(u)
-	subscribePage := view.NewSubscribePage(u)
+	//subscribeCtrl := NewSubscribePageController(u)
+	//subscribePage := view.NewSubscriptionFiltersVie(u)
 
 	rendererCtrl := NewRendererPageController(u)
 	rendererPage := view.NewRendererPage(u)
 
+	filtersCtrl := NewSubscriptionFiltersViewController(u)
+	filtersPage := view.NewSubscriptionFiltersView(filtersCtrl)
+	filtersCtrl.SetView(filtersPage)
+
 	u.pages = tview.NewPages().
 		AddPage(mainPageLabel, mainPage, false, true).
-		AddPage(subscribePageLabel, subscribePage, true, true).
+		//AddPage(subscribePageLabel, subscribePage, true, true).
 		AddPage(rendererPageLabel, rendererPage, true, true).
+		AddPage(subscriptionFiltersViewLabel, filtersPage, true, true).
 		AddAndSwitchToPage(startPageLabel, startPage, true)
+		//AddPage(startPageLabel, startPage, true, true).
+		//AddAndSwitchToPage(subscriptionFiltersViewLabel, filtersPage, true)
 
 	u.ctrl = controllers{
-		start:     startCtrl,
-		main:      mainCtrl,
-		subscribe: subscribeCtrl,
-		renderer:  rendererCtrl,
+		start: startCtrl,
+		main:  mainCtrl,
+		//subscribe: subscribeCtrl,
+		renderer: rendererCtrl,
+		filters:  filtersCtrl,
 	}
 
 	return u
@@ -90,12 +99,13 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 
 func (u *MqttUI) Connect(host string, port int, username, password string) {
 	u.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password)
-	u.c.Subscribe("hamweather/#", network.QosAtLeastOnce)
+	//u.c.Subscribe("hamweather/#", network.QosAtLeastOnce)
 	u.pages.SwitchToPage(mainPageLabel)
 }
 
 func (u *MqttUI) OnSubscribe() {
-	u.pages.ShowPage(subscribePageLabel)
+	//u.pages.ShowPage(subscribePageLabel)
+	u.pages.ShowPage(subscriptionFiltersViewLabel)
 }
 
 func (u *MqttUI) Subscribe(topic string, qos network.Qos) {
