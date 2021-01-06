@@ -11,118 +11,24 @@ import (
 )
 
 const (
-	mainPageLabel            = "mainpage"
-	defaultDocumentIndexSize = 32
+	mainPageLabel = "mainpage"
 )
 
 type (
-	documentIndex struct {
-		current   int
-		documents []*data.Document
-	}
-
-	documentStore struct {
-		current string
-		index   map[string]*documentIndex
-	}
-
 	MainPageController struct {
 		ctrl      Control
 		view      *view.MainPage
 		model     *model.Document
 		renderer  model.Renderer
-		documents *documentStore
+		documents *model.DocumentStore
 	}
 )
-
-func newDocumentIndxex() *documentIndex {
-	return &documentIndex{
-		current:   -1,
-		documents: make([]*data.Document, 0, defaultDocumentIndexSize),
-	}
-}
-
-func (i *documentIndex) Add(d *data.Document) {
-	i.documents = append(i.documents, d)
-
-	if i.current == -1 {
-		i.current = 0
-	}
-}
-
-func (i *documentIndex) Current() (int, *data.Document) {
-	if i.documents == nil {
-		return -1, data.NewDocumentEmpty()
-	}
-	return i.current, i.documents[i.current]
-}
-
-func (i *documentIndex) Next() (int, *data.Document) {
-	i.current = (i.current + 1) % len(i.documents)
-	return i.Current()
-}
-
-func (i *documentIndex) Prev() (int, *data.Document) {
-	if i.current == -1 {
-		panic("index is empty")
-	}
-
-	if i.current == 0 {
-		i.current = len(i.documents)
-	}
-
-	i.current--
-	return i.Current()
-}
-
-func (i *documentIndex) Len() int {
-	return len(i.documents)
-}
-
-func newDocumentStore() *documentStore {
-	return &documentStore{
-		index: make(map[string]*documentIndex),
-	}
-}
-
-func (s *documentStore) SetCurrent(name string) {
-	if name == "" {
-		panic("invalid index")
-	}
-
-	index := s.index[name]
-	if index == nil {
-		panic("name not in store")
-	}
-
-	s.current = name
-}
-
-func (s *documentStore) Store(t string, d *data.Document) {
-	if s.index[t] == nil {
-		s.index[t] = newDocumentIndxex()
-	}
-
-	s.index[t].Add(d)
-
-	if s.current == "" {
-		s.current = t
-	}
-}
-
-func (s *documentStore) Current() (string, *documentIndex) {
-	return s.current, s.index[s.current]
-}
-
-func (s *documentStore) Len() int {
-	return len(s.index)
-}
 
 func NewMainPageController(ctrl Control) *MainPageController {
 	return &MainPageController{
 		ctrl:      ctrl,
 		model:     model.NewDocument(),
-		documents: newDocumentStore(),
+		documents: model.NewDocumentStore(),
 		renderer:  ctrl.Renderers()[0],
 	}
 }
