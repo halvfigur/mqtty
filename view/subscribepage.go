@@ -11,8 +11,8 @@ const filterMaxWidth = 32
 
 type (
 	SubscriptionFiltersViewController interface {
-		Subscribe(topic string, qos network.Qos)
-		Unsubscribe(topic string)
+		Subscribe(topic string, qos network.Qos) error
+		Unsubscribe(topic string) error
 		OnChangeFocus(p tview.Primitive)
 		Cancel()
 	}

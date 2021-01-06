@@ -10,8 +10,8 @@ import (
 
 type (
 	StartPageController interface {
-		OnConnect(host string, port int, username, password string)
-		OnExit()
+		OnConnect(host string, port int, username, password string) error
+		Stop()
 	}
 
 	StartPage struct {
@@ -88,7 +88,7 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	})
 
 	form.AddButton("Exit", func() {
-		ctrl.OnExit()
+		ctrl.Stop()
 	})
 	form.SetTitle("Connection").SetBorder(true)
 

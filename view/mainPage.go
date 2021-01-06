@@ -13,7 +13,7 @@ type (
 		OnNextDocument()
 		OnPrevDocument()
 		OnSubscribe()
-		OnRenderer()
+		OnRendererSelected(renderer model.Renderer)
 	}
 
 	MainPage struct {
@@ -64,8 +64,6 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 		switch event.Rune() {
 		case 'f', 'F':
 			p.ctrl.OnSubscribe()
-		case 'r', 'R':
-			p.ctrl.OnRenderer()
 		}
 
 		return event

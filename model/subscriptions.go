@@ -6,14 +6,10 @@ import (
 
 const initialSize = 16
 
-type (
-	SubscriptionFilter struct {
-		name string
-		qos  network.Qos
-	}
-
-	SubscriptionFilters []*SubscriptionFilter
-)
+type SubscriptionFilter struct {
+	name string
+	qos  network.Qos
+}
 
 func NewSubscriptionFilter(filter string, qos network.Qos) *SubscriptionFilter {
 	return &SubscriptionFilter{
@@ -29,6 +25,8 @@ func (f *SubscriptionFilter) Name() string {
 func (f *SubscriptionFilter) Qos() network.Qos {
 	return f.qos
 }
+
+type SubscriptionFilters []*SubscriptionFilter
 
 func NewSubscriptionFilters() *SubscriptionFilters {
 	f := SubscriptionFilters(make([]*SubscriptionFilter, 0, initialSize))

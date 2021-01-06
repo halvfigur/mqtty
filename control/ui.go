@@ -8,44 +8,38 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/halvfigur/mqtty/data"
-	"github.com/halvfigur/mqtty/model"
 	"github.com/halvfigur/mqtty/network"
-	"github.com/halvfigur/mqtty/view"
 )
 
 type (
-	Control interface {
-		Connect(host string, port int, username, password string)
-
-		OnSubscribe()
-		Subscribe(topic string, qos network.Qos) error
-
-		Unsubscribe(topic string) error
-
-		Renderers() []model.Renderer
-		OnRenderer()
-		Renderer(renderer model.Renderer)
-		Focus(p tview.Primitive)
-
-		OnStop()
+	AppController interface {
 		Stop()
-
-		Cancel()
 	}
 
-	controllers struct {
-		start    *StartPageController
-		main     *MainPageController
-		renderer *RendererPageController
-		filters  *SubscriptionFiltersViewController
+	MqttController interface {
+		Connect(host string, port int, username, password string) error
+		Subscribe(topic string, qos network.Qos) error
+		Unsubscribe(topic string) error
+	}
+
+	ViewController interface {
+		Register(pageLabel string, p tview.Primitive, visible bool)
+		Display(pageLabel string)
+		Hide(pageLabel string)
+		Focus(p tview.Primitive)
+	}
+
+	Control interface {
+		AppController
+		MqttController
+		ViewController
 	}
 
 	MqttUI struct {
-		c         *network.MqttClient
-		app       *tview.Application
-		pages     *tview.Pages
-		ctrl      controllers
-		renderers []model.Renderer
+		c     *network.MqttClient
+		app   *tview.Application
+		pages *tview.Pages
+		main  *MainPageController
 	}
 )
 
@@ -54,74 +48,42 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 	app := tview.NewApplication()
 
 	u := &MqttUI{
-		c:   c,
-		app: app,
-		renderers: []model.Renderer{
-			model.NewRawRenderer(),
-			model.NewHexRenderer(),
-			model.NewJsonRenderer(),
-		},
+		c:     c,
+		app:   app,
+		pages: tview.NewPages(),
 	}
 
-	mainCtrl := NewMainPageController(u)
-	mainPage := view.NewMainPage(mainCtrl)
-	mainCtrl.SetView(mainPage)
-
-	rendererCtrl := NewRendererPageController(u)
-	rendererPage := view.NewRendererPage(u)
-
-	filtersCtrl := NewSubscriptionFiltersViewController(u)
-	filtersPage := view.NewSubscriptionFiltersView(filtersCtrl)
-	filtersCtrl.SetView(filtersPage)
-
-	startCtrl := NewStartPageController(u)
-	startPage := view.NewStartPage(startCtrl)
-
-	u.pages = tview.NewPages().
-		AddPage(mainPageLabel, mainPage, false, true).
-		AddPage(rendererPageLabel, rendererPage, true, true).
-		AddPage(subscriptionFiltersViewLabel, filtersPage, true, true).
-		AddAndSwitchToPage(startPageLabel, startPage, true)
-
-	u.ctrl = controllers{
-		start:    startCtrl,
-		main:     mainCtrl,
-		renderer: rendererCtrl,
-		filters:  filtersCtrl,
-	}
+	u.main = NewMainPageController(u)
 
 	return u
 }
 
-func (u *MqttUI) Connect(host string, port int, username, password string) {
-	u.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password)
-	//u.c.Subscribe("hamweather/#", network.QosAtLeastOnce)
-	u.pages.SwitchToPage(mainPageLabel)
+func (u *MqttUI) Connect(host string, port int, username, password string) error {
+	if err := u.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password); err != nil {
+		return err
+	}
+	u.Display(mainPageLabel)
+	return nil
 }
 
-func (u *MqttUI) OnSubscribe() {
-	u.pages.ShowPage(subscriptionFiltersViewLabel)
+func (u *MqttUI) Subscribe(filter string, qos network.Qos) error {
+	return u.c.Subscribe(filter, qos)
 }
 
-func (u *MqttUI) Subscribe(topic string, qos network.Qos) error {
-	return u.c.Subscribe(topic, qos)
+func (u *MqttUI) Unsubscribe(filter string) error {
+	return u.c.Unsubscribe(filter)
 }
 
-func (u *MqttUI) Unsubscribe(topic string) error {
-	return u.c.Unsubscribe(topic)
+func (u *MqttUI) Register(pageLabel string, p tview.Primitive, visible bool) {
+	u.pages.AddPage(pageLabel, p, true, visible)
 }
 
-func (u *MqttUI) Renderers() []model.Renderer {
-	return u.renderers
+func (u *MqttUI) Display(pageLabel string) {
+	u.pages.ShowPage(pageLabel)
 }
 
-func (u *MqttUI) OnRenderer() {
-	u.pages.ShowPage(rendererPageLabel)
-}
-
-func (u *MqttUI) Renderer(renderer model.Renderer) {
-	//u.pages.HidePage(rendererPageLabel)
-	u.ctrl.main.SetRenderer(renderer)
+func (u *MqttUI) Hide(pageLabel string) {
+	u.pages.HidePage(pageLabel)
 }
 
 func (u *MqttUI) Focus(p tview.Primitive) {
@@ -142,6 +104,8 @@ func (u *MqttUI) Cancel() {
 }
 
 func (u *MqttUI) Start() {
+	u.pages.SendToFront(startPageLabel)
+
 	u.app.SetRoot(u.pages, true)
 
 	go func() {
@@ -149,7 +113,7 @@ func (u *MqttUI) Start() {
 		for m := range u.c.Incomming() {
 			u.app.QueueUpdateDraw(func() {
 				doc := data.NewDocumentBytes(m.Payload())
-				u.ctrl.main.AddDocument(m.Topic(), doc)
+				u.main.AddDocument(m.Topic(), doc)
 			})
 		}
 	}()

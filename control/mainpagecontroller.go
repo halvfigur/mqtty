@@ -16,50 +16,52 @@ const (
 
 type (
 	MainPageController struct {
-		ctrl      Control
-		view      *view.MainPage
-		model     *model.Document
-		renderer  model.Renderer
-		documents *model.DocumentStore
+		ctrl        Control
+		mainView    *view.MainPage
+		connectCtrl *StartPageController
+		filtersCtrl *SubscriptionFiltersViewController
+		docModel    *model.Document
+		documents   *model.DocumentStore
 	}
 )
 
 func NewMainPageController(ctrl Control) *MainPageController {
-	return &MainPageController{
+	c := &MainPageController{
 		ctrl:      ctrl,
-		model:     model.NewDocument(),
+		docModel:  model.NewDocument(),
 		documents: model.NewDocumentStore(),
-		renderer:  ctrl.Renderers()[0],
 	}
-}
 
-func (c *MainPageController) SetView(v *view.MainPage) {
-	c.view = v
+	c.mainView = view.NewMainPage(c)
+
+	c.connectCtrl = NewStartPageController(ctrl)
+	c.filtersCtrl = NewSubscriptionFiltersViewController(ctrl)
+
+	ctrl.Register(mainPageLabel, c.mainView, false)
+	ctrl.Register(subscriptionFiltersViewLabel, c.filtersCtrl.GetView(), false)
+	ctrl.Register(startPageLabel, c.connectCtrl.GetView(), true)
+
+	return c
 }
 
 func (c *MainPageController) SetDocument(d *data.Document) {
-	c.model.SetDocument(d)
-	if c.view != nil {
-		c.view.SetDocument(c.model)
+	c.docModel.SetDocument(d)
+	if c.mainView != nil {
+		c.mainView.SetDocument(c.docModel)
 	}
 }
 
 func (c *MainPageController) AddDocument(t string, d *data.Document) {
 	c.documents.Store(t, d)
 
-	if c.view != nil {
-		c.view.AddTopic(t)
+	if c.mainView != nil {
+		c.mainView.AddTopic(t)
 		c.updateDocumentView()
 	}
 }
 
 func (c *MainPageController) OnTopicSelected(t string) {
 	c.documents.SetCurrent(t)
-	c.updateDocumentView()
-}
-
-func (c *MainPageController) SetRenderer(r model.Renderer) {
-	c.renderer = r
 	c.updateDocumentView()
 }
 
@@ -80,15 +82,15 @@ func (c *MainPageController) OnPrevDocument() {
 }
 
 func (c *MainPageController) OnSubscribe() {
-	c.ctrl.OnSubscribe()
+	c.ctrl.Display(subscriptionFiltersViewLabel)
 }
 
-func (c *MainPageController) OnRenderer() {
-	c.ctrl.OnRenderer()
+func (c *MainPageController) OnRendererSelected(renderer model.Renderer) {
+	c.docModel.SetRenderer(renderer)
+	c.updateDocumentView()
 }
 
 func (c *MainPageController) updateDocumentView() {
-	c.model.SetRenderer(c.renderer)
 
 	t, index := c.documents.Current()
 	if index == nil {
@@ -97,9 +99,27 @@ func (c *MainPageController) updateDocumentView() {
 
 	i, d := index.Current()
 
-	c.model.SetDocument(d)
+	c.docModel.SetDocument(d)
 
-	c.view.SetDocument(c.model)
-	c.view.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
-	c.view.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
+	c.mainView.SetDocument(c.docModel)
+	c.mainView.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
+	c.mainView.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
+}
+
+/*
+func (c *MainPageController) Connect(host string, port int, username, password string) error {
+	return c.ctrl.Connect(host, port, username, password)
+}
+
+func (c *MainPageController) Subscribe(topic string, qos network.Qos) error {
+	return c.ctrl.Subscribe(topic, qos)
+}
+
+func (c *MainPageController) Unsubscribe(topic string) error {
+	return c.ctrl.Unsubscribe(topic)
+}
+*/
+
+func (c *MainPageController) Cancel() {
+	c.ctrl.Hide(subscriptionFiltersViewLabel)
 }
