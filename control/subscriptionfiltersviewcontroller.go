@@ -27,8 +27,18 @@ func (c *SubscriptionFiltersViewController) SetView(v *view.SubscriptionFiltersV
 }
 
 func (c *SubscriptionFiltersViewController) Subscribe(topic string, qos network.Qos) {
-	c.ctrl.Subscribe(topic, qos)
+	if err := c.ctrl.Subscribe(topic, qos); err != nil {
+		return
+	}
 	c.filters.Add(model.NewSubscriptionFilter(topic, qos))
+	c.view.SetSubscriptionFilters(c.filters)
+}
+
+func (c *SubscriptionFiltersViewController) Unsubscribe(topic string) {
+	if err := c.ctrl.Unsubscribe(topic); err != nil {
+		return
+	}
+	c.filters.Remove(topic)
 	c.view.SetSubscriptionFilters(c.filters)
 }
 

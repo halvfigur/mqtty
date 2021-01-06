@@ -31,15 +31,14 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 		numberFieldWidth = 5
 		defaultPort      = 1883
 	)
-
-	p := &StartPage{
-		ctrl: ctrl,
-	}
-
 	host := "test.mosquitto.org"
 	port := defaultPort
 	username := ""
 	password := ""
+
+	p := &StartPage{
+		ctrl: ctrl,
+	}
 
 	form := tview.NewForm()
 	form.AddInputField(hostLabel, host, textFieldWidth, nil, func(text string) {
@@ -47,7 +46,7 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	})
 
 	validatePort := func(text string, lastChar rune) bool {
-		var re = regexp.MustCompile(`^\d+$`)
+		var re = regexp.MustCompile(`^[1-9]\d*$`)
 		m := !re.Match([]byte(text))
 		if !m {
 			port = -1
@@ -91,6 +90,7 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	form.AddButton("Exit", func() {
 		ctrl.OnExit()
 	})
+	form.SetTitle("[blue]Connection[-]").SetBorder(true)
 
 	p.Flex = center(form, 1, 1)
 	return p

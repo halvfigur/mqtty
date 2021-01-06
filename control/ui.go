@@ -17,7 +17,9 @@ type (
 		Connect(host string, port int, username, password string)
 
 		OnSubscribe()
-		Subscribe(topic string, qos network.Qos)
+		Subscribe(topic string, qos network.Qos) error
+
+		Unsubscribe(topic string) error
 
 		Renderers() []model.Renderer
 		OnRenderer()
@@ -104,8 +106,12 @@ func (u *MqttUI) OnSubscribe() {
 	u.pages.ShowPage(subscriptionFiltersViewLabel)
 }
 
-func (u *MqttUI) Subscribe(topic string, qos network.Qos) {
-	u.c.Subscribe(topic, qos)
+func (u *MqttUI) Subscribe(topic string, qos network.Qos) error {
+	return u.c.Subscribe(topic, qos)
+}
+
+func (u *MqttUI) Unsubscribe(topic string) error {
+	return u.c.Unsubscribe(topic)
 }
 
 func (u *MqttUI) Renderers() []model.Renderer {

@@ -12,6 +12,7 @@ const filterMaxWidth = 32
 type (
 	SubscriptionFiltersViewController interface {
 		Subscribe(topic string, qos network.Qos)
+		Unsubscribe(topic string)
 		OnChangeFocus(p tview.Primitive)
 		Cancel()
 	}
@@ -24,17 +25,13 @@ type (
 )
 
 func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *SubscriptionFiltersView {
-	filterList := tview.NewList()
-	filterList.SetBorder(true).SetTitle("[blue]Current[-]")
-
-	qosOpts := []string{"At most once", "At least once", "Exatly once"}
-
 	filterInput := tview.NewInputField().
 		SetLabel("[blue]Filter:[-] ").
 		SetFieldWidth(filterMaxWidth).
 		SetText("hamweather/#")
 	filterInput.SetBorderPadding(1, 1, 1, 1)
 
+	qosOpts := []string{"At most once", "At least once", "Exatly once"}
 	qosDropDown := tview.NewDropDown().
 		SetOptions(qosOpts, nil).
 		SetLabel("[blue]Qos:[-] ").
@@ -45,10 +42,11 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 	fc := NewFocusChain(filterInput, qosDropDown)
 
 	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
+		defer ctrl.OnChangeFocus(fc.Reset())
+
 		// Get filter name
 		if filterInput.GetText() == "" {
-			ctrl.OnChangeFocus(filterInput)
-			fc.Reset()
+			return
 		}
 
 		// Get qos option
@@ -71,6 +69,7 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 	clearButton := tview.NewButton("Clear").SetSelectedFunc(func() {
 		filterInput.SetText("")
 		qosDropDown.SetCurrentOption(0)
+		ctrl.OnChangeFocus(fc.Reset())
 	})
 	clearButton.SetBorder(true)
 
@@ -80,6 +79,19 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 		AddItem(qosDropDown, 0, 5, false).
 		AddItem(addButton, 0, 1, false).
 		AddItem(clearButton, 0, 1, false)
+
+	filterList := tview.NewList()
+	filterList.SetBorder(true).SetTitle("[blue]Current[-]")
+	filterList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyDelete:
+			i := filterList.GetCurrentItem()
+			name, _ := filterList.GetItemText(i)
+			ctrl.Unsubscribe(name)
+		}
+
+		return event
+	})
 
 	viewFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	viewFlex.SetTitle("Filters").SetBorder(true)

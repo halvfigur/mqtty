@@ -45,8 +45,12 @@ func (f *SubscriptionFilters) indexOf(name string) int {
 	return -1
 }
 
+func (f *SubscriptionFilters) Contains(name string) bool {
+	return f.indexOf(name) != -1
+}
+
 func (f *SubscriptionFilters) Add(filter *SubscriptionFilter) {
-	if f.indexOf(filter.Name()) != -1 {
+	if f.Contains(filter.Name()) {
 		return
 	}
 
