@@ -39,17 +39,13 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	p.topics.SetBorder(true).SetTitle("Topics")
 	p.topics.ShowSecondaryText(false)
 
-	p.Flex.SetDirection(tview.FlexRow)
-	p.Flex.AddItem(p.topics, 0, 1, true)
-	p.Flex.AddItem(p.doc, 0, 3, false)
-	p.Flex.AddItem(tview.NewTextView().
-		SetDynamicColors(true).
-		SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters [blue](R):[-] renderer"),
-		1, 0, false)
-
+	columnsFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(p.topics, 0, 1, true).
+		AddItem(p.doc, 0, 3, false)
 	fc := NewFocusChain(p.topics, p.doc)
 
-	p.Flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	columnsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
 			p.ctrl.OnChangeFocus(fc.Next())
@@ -68,6 +64,14 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 
 		return event
 	})
+
+	p.Flex = tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(columnsFlex, 0, 3, true).
+		AddItem(tview.NewTextView().
+			SetDynamicColors(true).
+			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters [blue](R):[-] renderer"),
+			1, 0, false)
 
 	return p
 }
