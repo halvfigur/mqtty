@@ -46,7 +46,7 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	p.Flex.AddItem(p.doc, 0, 3, false)
 	p.Flex.AddItem(tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("[blue](TAB):[-] navigate  [blue](S):[-] subscribe [blue](R):[-] renderer"),
+		SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters [blue](R):[-] renderer"),
 		1, 0, false)
 
 	fc := NewFocusChain(p.topics, p.doc)
@@ -64,9 +64,9 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 		}
 
 		switch event.Rune() {
-		case 's':
+		case 'f', 'F':
 			p.ctrl.OnSubscribe()
-		case 'r':
+		case 'r', 'R':
 			p.ctrl.OnRenderer()
 		}
 

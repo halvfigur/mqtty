@@ -33,9 +33,8 @@ type (
 	}
 
 	controllers struct {
-		start *StartPageController
-		main  *MainPageController
-		//subscribe *SubscribePageController
+		start    *StartPageController
+		main     *MainPageController
 		renderer *RendererPageController
 		filters  *SubscriptionFiltersViewController
 	}
@@ -62,15 +61,9 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 		},
 	}
 
-	startCtrl := NewStartPageController(u)
-	startPage := view.NewStartPage(startCtrl)
-
 	mainCtrl := NewMainPageController(u)
 	mainPage := view.NewMainPage(mainCtrl)
 	mainCtrl.SetView(mainPage)
-
-	//subscribeCtrl := NewSubscribePageController(u)
-	//subscribePage := view.NewSubscriptionFiltersVie(u)
 
 	rendererCtrl := NewRendererPageController(u)
 	rendererPage := view.NewRendererPage(u)
@@ -79,6 +72,9 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 	filtersPage := view.NewSubscriptionFiltersView(filtersCtrl)
 	filtersCtrl.SetView(filtersPage)
 
+	startCtrl := NewStartPageController(u)
+	startPage := view.NewStartPage(startCtrl)
+
 	u.pages = tview.NewPages().
 		AddPage(mainPageLabel, mainPage, false, true).
 		AddPage(rendererPageLabel, rendererPage, true, true).
@@ -86,9 +82,8 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 		AddAndSwitchToPage(startPageLabel, startPage, true)
 
 	u.ctrl = controllers{
-		start: startCtrl,
-		main:  mainCtrl,
-		//subscribe: subscribeCtrl,
+		start:    startCtrl,
+		main:     mainCtrl,
 		renderer: rendererCtrl,
 		filters:  filtersCtrl,
 	}
