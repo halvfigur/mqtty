@@ -90,7 +90,7 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	form.AddButton("Exit", func() {
 		ctrl.OnExit()
 	})
-	form.SetTitle("[blue]Connection[-]").SetBorder(true)
+	form.SetTitle("Connection").SetBorder(true)
 
 	p.Flex = center(form, 1, 1)
 	return p

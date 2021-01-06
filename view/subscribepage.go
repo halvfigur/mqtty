@@ -81,7 +81,7 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 		AddItem(clearButton, 0, 1, false)
 
 	filterList := tview.NewList()
-	filterList.SetBorder(true).SetTitle("[blue]Current[-]")
+	filterList.SetBorder(true).SetTitle("Current")
 	filterList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDelete:

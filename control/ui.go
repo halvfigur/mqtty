@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/halvfigur/mqtty/data"
@@ -49,6 +50,7 @@ type (
 )
 
 func NewMqttUI(c *network.MqttClient) *MqttUI {
+	tview.Styles.TitleColor = tcell.ColorBlue
 	app := tview.NewApplication()
 
 	u := &MqttUI{

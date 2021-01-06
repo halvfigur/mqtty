@@ -19,7 +19,7 @@ func NewDocumentView() *DocumentView {
 		TextView: tview.NewTextView(),
 	}
 
-	d.TextView.SetTitle("[blue]Document[-]").SetBorder(true)
+	d.TextView.SetTitle("Document").SetBorder(true)
 	return d
 }
 

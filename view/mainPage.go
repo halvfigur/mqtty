@@ -1,8 +1,6 @@
 package view
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
 	"github.com/rivo/tview"
@@ -38,7 +36,7 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	}
 
 	/* Topics list */
-	p.topics.SetBorder(true).SetTitle("[blue]Topics[-]")
+	p.topics.SetBorder(true).SetTitle("Topics")
 	p.topics.ShowSecondaryText(false)
 
 	p.Flex.SetDirection(tview.FlexRow)
@@ -103,11 +101,11 @@ func (p *MainPage) AddTopic(t string) {
 }
 
 func (p *MainPage) SetDocumentTitle(title string) {
-	p.doc.SetTitle(fmt.Sprint("[blue]", title, "[-]"))
+	p.doc.SetTitle(title)
 }
 
 func (p *MainPage) SetTopicsTitle(title string) {
-	p.topics.SetTitle(fmt.Sprint("[blue]", title, "[-]"))
+	p.topics.SetTitle(title)
 }
 
 func (p *MainPage) SetDocument(d *model.Document) {
