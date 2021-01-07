@@ -5,12 +5,14 @@ import "github.com/halvfigur/mqtty/data"
 type DocumentIndex struct {
 	current   int
 	documents []*data.Document
+	follow    bool
 }
 
 func newDocumentIndxex() *DocumentIndex {
 	return &DocumentIndex{
 		current:   -1,
 		documents: make([]*data.Document, 0, defaultDocumentIndexSize),
+		follow:    false,
 	}
 }
 
@@ -47,6 +49,30 @@ func (i *DocumentIndex) Prev() (int, *data.Document) {
 	return i.Current()
 }
 
+func (i *DocumentIndex) MoveToFirst() {
+	if i.current == -1 {
+		return
+	}
+
+	i.current = 0
+}
+
+func (i *DocumentIndex) MoveToLast() {
+	if len(i.documents) == 0 {
+		return
+	}
+
+	i.current = len(i.documents) - 1
+}
+
+func (i *DocumentIndex) Follow(enabled bool) {
+	if i.follow {
+		i.MoveToLast()
+	}
+
+	i.follow = enabled
+}
+
 func (i *DocumentIndex) Len() int {
 	return len(i.documents)
 }
@@ -54,6 +80,7 @@ func (i *DocumentIndex) Len() int {
 type DocumentStore struct {
 	current string
 	index   map[string]*DocumentIndex
+	follow  bool
 }
 
 const defaultDocumentIndexSize = 32
@@ -77,6 +104,37 @@ func (s *DocumentStore) SetCurrent(name string) {
 	s.current = name
 }
 
+func (s *DocumentStore) Next() (int, *data.Document) {
+	return s.index[s.current].Next()
+}
+
+func (s *DocumentStore) Prev() (int, *data.Document) {
+	return s.index[s.current].Prev()
+}
+
+func (s *DocumentStore) MoveToFirst() {
+	for _, i := range s.index {
+		i.MoveToFirst()
+	}
+}
+
+func (s *DocumentStore) MoveToLast() {
+	for _, i := range s.index {
+		i.MoveToLast()
+	}
+}
+
+func (s *DocumentStore) Follow(enabled bool) {
+	for _, i := range s.index {
+		i.Follow(enabled)
+	}
+
+	s.follow = enabled
+	if enabled {
+		s.MoveToLast()
+	}
+}
+
 func (s *DocumentStore) Store(t string, d *data.Document) {
 	if s.index[t] == nil {
 		s.index[t] = newDocumentIndxex()
@@ -87,11 +145,28 @@ func (s *DocumentStore) Store(t string, d *data.Document) {
 	if s.current == "" {
 		s.current = t
 	}
+
+	if s.follow {
+		s.MoveToLast()
+	}
 }
 
 func (s *DocumentStore) Current() (string, *DocumentIndex) {
 	return s.current, s.index[s.current]
 }
+
+/*
+func (s *DocumentStore) Current() (string, *data.Document) {
+	index := s.index[s.current]
+	if index == nil {
+		return "", nil
+	}
+
+	_, doc := index.Current()
+
+	return s.current, doc
+}
+*/
 
 func (s *DocumentStore) Len() int {
 	return len(s.index)

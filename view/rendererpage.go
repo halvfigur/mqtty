@@ -15,12 +15,12 @@ type (
 		//*tview.DropDown
 		*widget.RadioButtons
 
-		ctrl  RendererPageController
-		model []model.Renderer
+		onSelected func(renderer model.Renderer)
+		model      []model.Renderer
 	}
 )
 
-func NewRendererPage(ctrl RendererPageController) *RendererPage {
+func NewRendererPage() *RendererPage {
 	/*
 		d := tview.NewDropDown().SetLabel("[blue]Renderer:[-] ")
 		d.SetBorder(true).SetTitle("Select renderer")
@@ -30,12 +30,16 @@ func NewRendererPage(ctrl RendererPageController) *RendererPage {
 	return &RendererPage{
 		//DropDown: d,
 		RadioButtons: r,
-		ctrl:         ctrl,
 		model:        make([]model.Renderer, 0),
 	}
 }
 
-func (p *RendererPage) SetRenderers(renderers []model.Renderer) {
+func (p *RendererPage) SetSelectedFunc(handler func(renderer model.Renderer)) *RendererPage {
+	p.onSelected = handler
+	return p
+}
+
+func (p *RendererPage) SetRenderers(renderers []model.Renderer) *RendererPage {
 	p.model = renderers
 
 	options := make([]string, len(renderers))
@@ -43,8 +47,12 @@ func (p *RendererPage) SetRenderers(renderers []model.Renderer) {
 		options[i] = r.Name()
 	}
 	p.SetOptions(options, func(text string, index int) {
-		p.ctrl.OnRendererSelected(p.model[index])
+		if p.onSelected != nil {
+			p.onSelected(p.model[index])
+		}
 	})
 
 	p.SetCurrentOption(0)
+
+	return p
 }

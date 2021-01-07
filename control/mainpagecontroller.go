@@ -1,8 +1,6 @@
 package control
 
 import (
-	"fmt"
-
 	"github.com/rivo/tview"
 
 	"github.com/halvfigur/mqtty/data"
@@ -32,7 +30,8 @@ func NewMainPageController(ctrl Control) *MainPageController {
 		documents: model.NewDocumentStore(),
 	}
 
-	c.mainView = view.NewMainPage(c, NewRendererPageController(c))
+	c.mainView = view.NewMainPage(c)
+	c.mainView.SetDocumentStore(c.documents)
 
 	c.connectCtrl = NewStartPageController(ctrl)
 	c.filtersCtrl = NewSubscriptionFiltersViewController(ctrl)
@@ -44,25 +43,15 @@ func NewMainPageController(ctrl Control) *MainPageController {
 	return c
 }
 
-func (c *MainPageController) SetDocument(d *data.Document) {
-	c.docModel.SetDocument(d)
-	if c.mainView != nil {
-		c.mainView.SetDocument(c.docModel)
-	}
-}
-
 func (c *MainPageController) AddDocument(t string, d *data.Document) {
 	c.documents.Store(t, d)
-
-	if c.mainView != nil {
-		c.mainView.AddTopic(t)
-		c.updateDocumentView()
-	}
+	c.mainView.AddTopic(t)
+	c.mainView.Refresh()
 }
 
 func (c *MainPageController) OnTopicSelected(t string) {
 	c.documents.SetCurrent(t)
-	c.updateDocumentView()
+	c.mainView.Refresh()
 }
 
 func (c *MainPageController) OnChangeFocus(p tview.Primitive) {
@@ -70,40 +59,24 @@ func (c *MainPageController) OnChangeFocus(p tview.Primitive) {
 }
 
 func (c *MainPageController) OnNextDocument() {
-	_, index := c.documents.Current()
-	index.Next()
-	c.updateDocumentView()
+	c.documents.Next()
+	c.mainView.Refresh()
 }
 
 func (c *MainPageController) OnPrevDocument() {
-	_, index := c.documents.Current()
-	index.Prev()
-	c.updateDocumentView()
+	c.documents.Prev()
 }
 
 func (c *MainPageController) OnSubscribe() {
 	c.ctrl.Display(subscriptionFiltersViewLabel)
 }
 
-func (c *MainPageController) OnRendererSelected(renderer model.Renderer) {
-	c.docModel.SetRenderer(renderer)
-	c.updateDocumentView()
+func (c *MainPageController) OnSetScrollToTop(enabled bool) {
 }
 
-func (c *MainPageController) updateDocumentView() {
-
-	t, index := c.documents.Current()
-	if index == nil {
-		return
-	}
-
-	i, d := index.Current()
-
-	c.docModel.SetDocument(d)
-
-	c.mainView.SetDocument(c.docModel)
-	c.mainView.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
-	c.mainView.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
+func (c *MainPageController) OnSetFollow(enabled bool) {
+	c.documents.Follow(enabled)
+	c.mainView.Refresh()
 }
 
 func (c *MainPageController) Cancel() {

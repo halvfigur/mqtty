@@ -1,6 +1,8 @@
 package view
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
 	"github.com/rivo/tview"
@@ -13,35 +15,53 @@ type (
 		OnNextDocument()
 		OnPrevDocument()
 		OnSubscribe()
-		OnRendererSelected(renderer model.Renderer)
+		OnSetFollow(enabled bool)
 	}
 
 	MainPage struct {
 		*tview.Flex
 		ctrl MainPageController
 
-		topics    *tview.List
-		doc       *DocumentView
-		renderers *tview.List
+		topics            *tview.List
+		docView           *DocumentView
+		documents         *model.DocumentStore
+		scrollToBeginning bool
 	}
 )
 
-func NewMainPage(ctrl MainPageController, rendererCtrl RendererPageController) *MainPage {
+func NewMainPage(ctrl MainPageController) *MainPage {
 	p := &MainPage{
-		Flex:      tview.NewFlex(),
-		topics:    tview.NewList(),
-		doc:       NewDocumentView(),
-		ctrl:      ctrl,
-		renderers: tview.NewList(),
+		Flex:    tview.NewFlex(),
+		topics:  tview.NewList(),
+		docView: NewDocumentView(),
+		ctrl:    ctrl,
 	}
 
 	/* Topics list */
 	p.topics.SetBorder(true).SetTitle("Topics")
 	p.topics.ShowSecondaryText(false)
+	p.topics.SetChangedFunc(func(index int, mainText, secondaryText string, short rune) {
+		p.ctrl.OnTopicSelected(mainText)
+	})
 
-	renderersView := rendererCtrl.GetView()
-	scrollToTopCheckbox := tview.NewCheckbox().SetLabel("Scroll to top: ")
-	followCheckbox := tview.NewCheckbox().SetLabel("Follow: ")
+	scrollToTopCheckbox := tview.NewCheckbox().
+		SetLabel("Scroll to top: ").
+		SetChangedFunc(func(checked bool) { p.scrollToBeginning = checked })
+
+	followCheckbox := tview.NewCheckbox().
+		SetLabel("Follow: ").
+		SetChangedFunc(ctrl.OnSetFollow)
+
+	renderersView := NewRendererPage().
+		SetRenderers([]model.Renderer{
+			model.NewRawRenderer(),
+			model.NewHexRenderer(),
+			model.NewJsonRenderer(),
+		}).
+		SetSelectedFunc(func(renderer model.Renderer) {
+			p.docView.SetRenderer(renderer)
+			p.Refresh()
+		})
 	controlsFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	controlsFlex.SetBorder(true).SetTitle("Controls")
 	controlsFlex.AddItem(renderersView, 0, 1, false).
@@ -51,9 +71,9 @@ func NewMainPage(ctrl MainPageController, rendererCtrl RendererPageController) *
 	columnsFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(p.topics, 0, 1, true).
-		AddItem(p.doc, 0, 3, false).
+		AddItem(p.docView, 0, 3, false).
 		AddItem(controlsFlex, 0, 1, false)
-	fc := NewFocusChain(p.topics, p.doc, renderersView, scrollToTopCheckbox, followCheckbox)
+	fc := NewFocusChain(p.topics, p.docView, renderersView, scrollToTopCheckbox, followCheckbox)
 
 	columnsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -86,6 +106,10 @@ func NewMainPage(ctrl MainPageController, rendererCtrl RendererPageController) *
 	return p
 }
 
+func (p *MainPage) SetDocumentStore(documents *model.DocumentStore) {
+	p.documents = documents
+}
+
 func (p *MainPage) Focus(delegate func(p tview.Primitive)) {
 	p.Flex.SetFullScreen(true)
 	delegate(p.Flex)
@@ -107,25 +131,36 @@ func (p *MainPage) AddTopic(t string) {
 		shortCut      = 0
 	)
 
-	p.topics.AddItem(t, secondaryText, shortCut, func() {
-		p.ctrl.OnTopicSelected(t)
-	})
+	p.topics.AddItem(t, secondaryText, shortCut, nil)
+	/*
+		p.topics.AddItem(t, secondaryText, shortCut, func() {
+			p.ctrl.OnTopicSelected(t)
+		})
+	*/
 }
 
 func (p *MainPage) SetDocumentTitle(title string) {
-	p.doc.SetTitle(title)
+	p.docView.SetTitle(title)
 }
 
 func (p *MainPage) SetTopicsTitle(title string) {
 	p.topics.SetTitle(title)
 }
 
-func (p *MainPage) SetDocument(d *model.Document) {
-	p.doc.SetDocument(d)
-	p.doc.Refresh()
-}
-
 func (p *MainPage) Refresh() {
-	p.doc.Refresh()
-	p.doc.ScrollToBeginning()
+	t, index := p.documents.Current()
+	if index == nil {
+		return
+	}
+
+	i, d := index.Current()
+
+	p.docView.SetDocument(d)
+	p.docView.Refresh()
+	if p.scrollToBeginning {
+		p.docView.ScrollToBeginning()
+	}
+
+	p.SetTopicsTitle(fmt.Sprintf("Topics %d", p.documents.Len()))
+	p.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 }
