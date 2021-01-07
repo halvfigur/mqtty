@@ -26,7 +26,7 @@ type (
 	}
 )
 
-func NewMainPage(ctrl MainPageController) *MainPage {
+func NewMainPage(ctrl MainPageController, rendererCtrl RendererPageController) *MainPage {
 	p := &MainPage{
 		Flex:      tview.NewFlex(),
 		topics:    tview.NewList(),
@@ -39,11 +39,14 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	p.topics.SetBorder(true).SetTitle("Topics")
 	p.topics.ShowSecondaryText(false)
 
+	renderersView := rendererCtrl.GetView()
+
 	columnsFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(p.topics, 0, 1, true).
-		AddItem(p.doc, 0, 3, false)
-	fc := NewFocusChain(p.topics, p.doc)
+		AddItem(p.doc, 0, 3, false).
+		AddItem(renderersView, 0, 1, false)
+	fc := NewFocusChain(p.topics, p.doc, renderersView)
 
 	columnsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {

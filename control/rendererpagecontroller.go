@@ -9,13 +9,13 @@ const rendererPageLabel = "rendererpage"
 
 type (
 	RendererPageController struct {
-		ctrl      Control
+		ctrl      *MainPageController
 		view      *view.RendererPage
 		renderers []model.Renderer
 	}
 )
 
-func NewRendererPageController(ctrl Control) *RendererPageController {
+func NewRendererPageController(ctrl *MainPageController) *RendererPageController {
 	c := &RendererPageController{
 		ctrl: ctrl,
 		renderers: []model.Renderer{
@@ -35,4 +35,5 @@ func (c *RendererPageController) GetView() *view.RendererPage {
 }
 
 func (c *RendererPageController) OnRendererSelected(renderer model.Renderer) {
+	c.ctrl.OnRendererSelected(renderer)
 }

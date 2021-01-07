@@ -32,7 +32,7 @@ func NewMainPageController(ctrl Control) *MainPageController {
 		documents: model.NewDocumentStore(),
 	}
 
-	c.mainView = view.NewMainPage(c)
+	c.mainView = view.NewMainPage(c, NewRendererPageController(c))
 
 	c.connectCtrl = NewStartPageController(ctrl)
 	c.filtersCtrl = NewSubscriptionFiltersViewController(ctrl)
@@ -105,20 +105,6 @@ func (c *MainPageController) updateDocumentView() {
 	c.mainView.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
 	c.mainView.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 }
-
-/*
-func (c *MainPageController) Connect(host string, port int, username, password string) error {
-	return c.ctrl.Connect(host, port, username, password)
-}
-
-func (c *MainPageController) Subscribe(topic string, qos network.Qos) error {
-	return c.ctrl.Subscribe(topic, qos)
-}
-
-func (c *MainPageController) Unsubscribe(topic string) error {
-	return c.ctrl.Unsubscribe(topic)
-}
-*/
 
 func (c *MainPageController) Cancel() {
 	c.ctrl.Hide(subscriptionFiltersViewLabel)

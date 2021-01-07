@@ -8,6 +8,7 @@ import (
 type (
 	RendererPageController interface {
 		OnRendererSelected(renderer model.Renderer)
+		GetView() *RendererPage
 	}
 
 	RendererPage struct {
