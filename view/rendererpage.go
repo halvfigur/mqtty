@@ -25,8 +25,7 @@ func NewRendererPage(ctrl RendererPageController) *RendererPage {
 		d := tview.NewDropDown().SetLabel("[blue]Renderer:[-] ")
 		d.SetBorder(true).SetTitle("Select renderer")
 	*/
-	r := widget.NewRadioButtons()
-	r.SetTitle("Select renderer")
+	r := widget.NewRadioButtons().SetHeader("[blue]Renderer[-]")
 
 	return &RendererPage{
 		//DropDown: d,

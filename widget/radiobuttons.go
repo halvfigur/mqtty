@@ -10,6 +10,7 @@ import (
 // RadioButtons implements a simple primitive for radio button selections.
 type RadioButtons struct {
 	*tview.Box
+	header         string
 	options        []string
 	currentOption  int
 	onSelectedFunc func(text string, index int)
@@ -22,19 +23,32 @@ func NewRadioButtons() *RadioButtons {
 	}
 }
 
-func (r *RadioButtons) SetOptions(options []string, handler func(text string, index int)) {
-	r.options = options
-	r.onSelectedFunc = handler
+func (r *RadioButtons) SetHeader(header string) *RadioButtons {
+	r.header = header
+	return r
 }
 
-func (r *RadioButtons) SetCurrentOption(index int) {
+func (r *RadioButtons) SetOptions(options []string, handler func(text string, index int)) *RadioButtons {
+	r.options = options
+	r.onSelectedFunc = handler
+
+	return r
+}
+
+func (r *RadioButtons) SetCurrentOption(index int) *RadioButtons {
 	r.currentOption = index
+	return r
 }
 
 // Draw draws this primitive onto the screen.
 func (r *RadioButtons) Draw(screen tcell.Screen) {
 	r.Box.DrawForSubclass(screen, r)
 	x, y, width, height := r.GetInnerRect()
+
+	if r.header != "" {
+		tview.Print(screen, r.header, x, y, width, tview.AlignLeft, tcell.ColorWhite)
+		y += 1
+	}
 
 	for index, option := range r.options {
 		if index >= height {
