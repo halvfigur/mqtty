@@ -2,7 +2,7 @@ package view
 
 import (
 	"github.com/halvfigur/mqtty/model"
-	"github.com/rivo/tview"
+	"github.com/halvfigur/mqtty/widget"
 )
 
 type (
@@ -12,20 +12,27 @@ type (
 	}
 
 	RendererPage struct {
-		*tview.DropDown
+		//*tview.DropDown
+		*widget.RadioButtons
+
 		ctrl  RendererPageController
 		model []model.Renderer
 	}
 )
 
 func NewRendererPage(ctrl RendererPageController) *RendererPage {
-	d := tview.NewDropDown().SetLabel("[blue]Renderer:[-] ")
-	d.SetBorder(true).SetTitle("Select renderer")
+	/*
+		d := tview.NewDropDown().SetLabel("[blue]Renderer:[-] ")
+		d.SetBorder(true).SetTitle("Select renderer")
+	*/
+	r := widget.NewRadioButtons()
+	r.SetTitle("Select renderer")
 
 	return &RendererPage{
-		DropDown: d,
-		ctrl:     ctrl,
-		model:    make([]model.Renderer, 0),
+		//DropDown: d,
+		RadioButtons: r,
+		ctrl:         ctrl,
+		model:        make([]model.Renderer, 0),
 	}
 }
 

@@ -1,5 +1,4 @@
-// Demo code which illustrates how to implement your own primitive.
-package main
+package widget
 
 import (
 	"fmt"
@@ -11,16 +10,25 @@ import (
 // RadioButtons implements a simple primitive for radio button selections.
 type RadioButtons struct {
 	*tview.Box
-	options       []string
-	currentOption int
+	options        []string
+	currentOption  int
+	onSelectedFunc func(text string, index int)
 }
 
 // NewRadioButtons returns a new radio button primitive.
-func NewRadioButtons(options []string) *RadioButtons {
+func NewRadioButtons() *RadioButtons {
 	return &RadioButtons{
-		Box:     tview.NewBox(),
-		options: options,
+		Box: tview.NewBox(),
 	}
+}
+
+func (r *RadioButtons) SetOptions(options []string, handler func(text string, index int)) {
+	r.options = options
+	r.onSelectedFunc = handler
+}
+
+func (r *RadioButtons) SetCurrentOption(index int) {
+	r.currentOption = index
 }
 
 // Draw draws this primitive onto the screen.
@@ -37,7 +45,7 @@ func (r *RadioButtons) Draw(screen tcell.Screen) {
 			radioButton = "\u25c9" // Checked.
 		}
 		line := fmt.Sprintf(`%s[white]  %s`, radioButton, option)
-		tview.Print(screen, line, x, y+index, width, tview.AlignLeft, tcell.ColorYellow)
+		tview.Print(screen, line, x, y+index, width, tview.AlignLeft, tcell.ColorWhite)
 	}
 }
 
@@ -55,6 +63,10 @@ func (r *RadioButtons) InputHandler() func(event *tcell.EventKey, setFocus func(
 			if r.currentOption >= len(r.options) {
 				r.currentOption = len(r.options) - 1
 			}
+		}
+
+		if r.onSelectedFunc != nil {
+			r.onSelectedFunc(r.options[r.currentOption], r.currentOption)
 		}
 	})
 }
@@ -81,6 +93,7 @@ func (r *RadioButtons) MouseHandler() func(action tview.MouseAction, event *tcel
 	})
 }
 
+/*
 func main() {
 	radioButtons := NewRadioButtons([]string{"Lions", "Elephants", "Giraffes"})
 	radioButtons.SetBorder(true).
@@ -90,3 +103,4 @@ func main() {
 		panic(err)
 	}
 }
+*/
