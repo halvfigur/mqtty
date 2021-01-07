@@ -38,5 +38,5 @@ func (c *StartPageController) OnConnect(host string, port int, username, passwor
 }
 
 func (c *StartPageController) Stop() {
-	c.ctrl.Stop()
+	c.ctrl.Cancel()
 }

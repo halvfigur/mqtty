@@ -13,6 +13,8 @@ import (
 
 type (
 	AppController interface {
+		OnConnect()
+		OnSubscribe()
 		Stop()
 	}
 
@@ -27,6 +29,7 @@ type (
 		Display(pageLabel string)
 		Hide(pageLabel string)
 		Focus(p tview.Primitive)
+		Cancel()
 	}
 
 	Control interface {
@@ -82,6 +85,14 @@ func (u *MqttUI) Display(pageLabel string) {
 	u.pages.ShowPage(pageLabel)
 }
 
+func (u *MqttUI) OnConnect() {
+	u.Display(startPageLabel)
+}
+
+func (u *MqttUI) OnSubscribe() {
+	u.Display(subscriptionFiltersViewLabel)
+}
+
 func (u *MqttUI) Hide(pageLabel string) {
 	u.pages.HidePage(pageLabel)
 }
@@ -104,7 +115,8 @@ func (u *MqttUI) Cancel() {
 }
 
 func (u *MqttUI) Start() {
-	u.pages.SendToFront(startPageLabel)
+	u.Display(mainPageLabel)
+	u.Display(startPageLabel)
 
 	u.app.SetRoot(u.pages, true)
 

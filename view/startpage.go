@@ -40,6 +40,11 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 		ctrl: ctrl,
 	}
 
+	errorMsgView := tview.NewTextView().
+		SetWrap(true).
+		SetWordWrap(true).
+		SetDynamicColors(true)
+
 	form := tview.NewForm()
 	form.AddInputField(hostLabel, host, textFieldWidth, nil, func(text string) {
 		host = text
@@ -84,14 +89,21 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 			return
 		}
 
-		ctrl.OnConnect(host, port, username, password)
+		errorMsgView.Clear()
+		if err := ctrl.OnConnect(host, port, username, password); err != nil {
+			errorMsgView.SetText(fmt.Sprint("[red]Failed to connect:[-] ", err.Error()))
+		}
 	})
 
-	form.AddButton("Exit", func() {
+	form.AddButton("Quit", func() {
 		ctrl.Stop()
 	})
-	form.SetTitle("Connection").SetBorder(true)
 
-	p.Flex = center(form, 1, 1)
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex.SetTitle("Connection").SetBorder(true)
+	flex.AddItem(form, 0, 1, true).
+		AddItem(errorMsgView, 1, 0, false)
+
+	p.Flex = center(flex, 1, 1)
 	return p
 }

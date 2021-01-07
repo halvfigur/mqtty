@@ -38,7 +38,7 @@ func NewMainPageController(ctrl Control) *MainPageController {
 
 	ctrl.Register(mainPageLabel, c.mainView, false)
 	ctrl.Register(subscriptionFiltersViewLabel, c.filtersCtrl.GetView(), false)
-	ctrl.Register(startPageLabel, c.connectCtrl.GetView(), true)
+	ctrl.Register(startPageLabel, c.connectCtrl.GetView(), false)
 
 	return c
 }
@@ -68,6 +68,7 @@ func (c *MainPageController) OnPrevDocument() {
 }
 
 func (c *MainPageController) OnSubscribe() {
+	c.ctrl.OnSubscribe()
 	c.ctrl.Display(subscriptionFiltersViewLabel)
 }
 
@@ -77,6 +78,10 @@ func (c *MainPageController) OnSetScrollToTop(enabled bool) {
 func (c *MainPageController) OnSetFollow(enabled bool) {
 	c.documents.Follow(enabled)
 	c.mainView.Refresh()
+}
+
+func (c *MainPageController) OnConnect() {
+	c.ctrl.OnConnect()
 }
 
 func (c *MainPageController) Cancel() {

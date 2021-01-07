@@ -14,6 +14,7 @@ type (
 		OnChangeFocus(p tview.Primitive)
 		OnNextDocument()
 		OnPrevDocument()
+		OnConnect()
 		OnSubscribe()
 		OnSetFollow(enabled bool)
 	}
@@ -100,7 +101,7 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters [blue](R):[-] renderer"),
+			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters"),
 			1, 0, false)
 
 	return p
@@ -148,12 +149,16 @@ func (p *MainPage) SetTopicsTitle(title string) {
 }
 
 func (p *MainPage) Refresh() {
+
 	t, index := p.documents.Current()
+	p.SetTopicsTitle(fmt.Sprintf("Topics %d", p.documents.Len()))
 	if index == nil {
+		p.SetDocumentTitle("Document (none)")
 		return
 	}
 
 	i, d := index.Current()
+	p.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 
 	p.docView.SetDocument(d)
 	p.docView.Refresh()
@@ -161,6 +166,4 @@ func (p *MainPage) Refresh() {
 		p.docView.ScrollToBeginning()
 	}
 
-	p.SetTopicsTitle(fmt.Sprintf("Topics %d", p.documents.Len()))
-	p.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 }

@@ -1,6 +1,8 @@
 package view
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
 	"github.com/halvfigur/mqtty/network"
@@ -41,6 +43,11 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 
 	fc := NewFocusChain(filterInput, qosDropDown)
 
+	errorMsgView := tview.NewTextView().
+		SetWrap(true).
+		SetWordWrap(true).
+		SetDynamicColors(true)
+
 	subscribe := func() {
 		defer ctrl.OnChangeFocus(fc.Reset())
 
@@ -62,7 +69,10 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 			qos = network.QosExatlyOnce
 		}
 
-		ctrl.Subscribe(filterInput.GetText(), qos)
+		errorMsgView.Clear()
+		if err := ctrl.Subscribe(filterInput.GetText(), qos); err != nil {
+			errorMsgView.SetText(fmt.Sprint("[red]Failed to subscribe:[-] ", err.Error()))
+		}
 	}
 
 	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
@@ -91,7 +101,9 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 		case tcell.KeyDelete:
 			i := filterList.GetCurrentItem()
 			name, _ := filterList.GetItemText(i)
-			ctrl.Unsubscribe(name)
+			if err := ctrl.Unsubscribe(name); err != nil {
+				errorMsgView.SetText(fmt.Sprint("[red]Unsubscribe failed:[-], ", err.Error()))
+			}
 		}
 
 		return event
@@ -101,6 +113,7 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 	viewFlex.SetTitle("Filters").SetBorder(true)
 	viewFlex.AddItem(filterFlex, 3, 0, true)
 	viewFlex.AddItem(filterList, 0, 1, false)
+	viewFlex.AddItem(errorMsgView, 1, 0, false)
 
 	fc.Add(addButton, clearButton, filterList)
 

@@ -1,7 +1,9 @@
 package network
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -116,19 +118,27 @@ func (c *MqttClient) Connect(host string, port int, credentials ...string) error
 	opts.OnConnect = c.onConnect
 	opts.OnConnectionLost = c.onConnectionLost
 	c.c = mqtt.NewClient(opts)
-	if token := c.c.Connect(); token.Wait() && token.Error() != nil {
+	if token := c.c.Connect(); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		return token.Error()
 	}
 	return nil
 }
 
 func (c *MqttClient) Subscribe(topic string, qos Qos) error {
+	if !c.c.IsConnected() {
+		return errors.New("not connected")
+	}
+
 	t := c.c.Subscribe(topic, byte(qos), nil)
 	t.Wait()
 	return t.Error()
 }
 
 func (c *MqttClient) Unsubscribe(topic string) error {
+	if !c.c.IsConnected() {
+		return errors.New("not connected")
+	}
+
 	t := c.c.Unsubscribe(topic)
 	t.Wait()
 	return t.Error()

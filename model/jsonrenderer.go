@@ -24,7 +24,10 @@ func (r *JsonRenderer) Render(data []byte) ([]byte, bool) {
 	b := new(bytes.Buffer)
 
 	if err := json.Indent(b, data, "    ", ""); err != nil {
-		return []byte(fmt.Sprint("[red]Document is not valid JSON:[-] ", err.Error())), true
+		b := new(bytes.Buffer)
+		b.WriteString(fmt.Sprintf("[red]Document is not valid JSON:[-] %s\n\n", err.Error()))
+		b.Write(data)
+		return b.Bytes(), true
 	}
 
 	return b.Bytes(), false
