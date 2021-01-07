@@ -41,7 +41,7 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 
 	fc := NewFocusChain(filterInput, qosDropDown)
 
-	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
+	subscribe := func() {
 		defer ctrl.OnChangeFocus(fc.Reset())
 
 		// Get filter name
@@ -63,6 +63,10 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 		}
 
 		ctrl.Subscribe(filterInput.GetText(), qos)
+	}
+
+	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
+		subscribe()
 	})
 	addButton.SetBorder(true)
 
@@ -108,6 +112,10 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 			ctrl.OnChangeFocus(fc.Prev())
 		case tcell.KeyEscape:
 			ctrl.Cancel()
+		case tcell.KeyEnter:
+			if filterInput.HasFocus() {
+				subscribe()
+			}
 		}
 
 		return event

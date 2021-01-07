@@ -40,13 +40,20 @@ func NewMainPage(ctrl MainPageController, rendererCtrl RendererPageController) *
 	p.topics.ShowSecondaryText(false)
 
 	renderersView := rendererCtrl.GetView()
+	scrollToTopCheckbox := tview.NewCheckbox().SetLabel("Scroll to top: ")
+	followCheckbox := tview.NewCheckbox().SetLabel("Follow: ")
+	controlsFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+	controlsFlex.SetBorder(true).SetTitle("Controls")
+	controlsFlex.AddItem(renderersView, 0, 1, false).
+		AddItem(scrollToTopCheckbox, 0, 1, false).
+		AddItem(followCheckbox, 0, 1, false)
 
 	columnsFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(p.topics, 0, 1, true).
 		AddItem(p.doc, 0, 3, false).
-		AddItem(renderersView, 0, 1, false)
-	fc := NewFocusChain(p.topics, p.doc, renderersView)
+		AddItem(controlsFlex, 0, 1, false)
+	fc := NewFocusChain(p.topics, p.doc, renderersView, scrollToTopCheckbox, followCheckbox)
 
 	columnsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {

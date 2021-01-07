@@ -10,7 +10,7 @@ import (
 // RadioButtons implements a simple primitive for radio button selections.
 type RadioButtons struct {
 	*tview.Box
-	header         string
+	label          string
 	options        []string
 	currentOption  int
 	onSelectedFunc func(text string, index int)
@@ -23,8 +23,8 @@ func NewRadioButtons() *RadioButtons {
 	}
 }
 
-func (r *RadioButtons) SetHeader(header string) *RadioButtons {
-	r.header = header
+func (r *RadioButtons) SetLabel(label string) *RadioButtons {
+	r.label = label
 	return r
 }
 
@@ -45,8 +45,8 @@ func (r *RadioButtons) Draw(screen tcell.Screen) {
 	r.Box.DrawForSubclass(screen, r)
 	x, y, width, height := r.GetInnerRect()
 
-	if r.header != "" {
-		tview.Print(screen, r.header, x, y, width, tview.AlignLeft, tcell.ColorWhite)
+	if r.label != "" {
+		tview.Print(screen, r.label, x, y, width, tview.AlignLeft, tcell.ColorWhite)
 		y += 1
 	}
 
@@ -58,7 +58,12 @@ func (r *RadioButtons) Draw(screen tcell.Screen) {
 		if index == r.currentOption {
 			radioButton = "\u25c9" // Checked.
 		}
-		line := fmt.Sprintf(`%s[white]  %s`, radioButton, option)
+
+		attribute := ""
+		if r.Box.HasFocus() && r.currentOption == index {
+			attribute = "::b"
+		}
+		line := fmt.Sprintf(`%s[white%s]  %s`, radioButton, attribute, option)
 		tview.Print(screen, line, x, y+index, width, tview.AlignLeft, tcell.ColorWhite)
 	}
 }
