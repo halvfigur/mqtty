@@ -15,25 +15,25 @@ const (
 	openFileViewLabel = "openfileview"
 )
 
-type PublishPageController struct {
+type Publish struct {
 	ctrl     Control
-	view     *view.PublishPage
-	fileView *view.OpenFileView
+	view     *view.Publish
+	fileView *view.OpenFile
 }
 
-func NewPublishPageController(ctrl Control) *PublishPageController {
+func NewPublish(ctrl Control) *Publish {
 	cwd, err := os.Getwd()
 	if err != nil {
 		cwd = "/"
 	}
 
-	c := &PublishPageController{
+	c := &Publish{
 		ctrl: ctrl,
 	}
 
-	c.view = view.NewPublishPage(c)
+	c.view = view.NewPublish(c)
 
-	c.fileView = view.NewOpenFileView(cwd).
+	c.fileView = view.NewOpenFile(cwd).
 		SetOnFileSelected(c.OnFileSelected).
 		SetOnError(c.OnError)
 	c.ctrl.Register(publishPageLabel, c.view, false)
@@ -42,15 +42,15 @@ func NewPublishPageController(ctrl Control) *PublishPageController {
 	return c
 }
 
-func (c *PublishPageController) GetView(p tview.Primitive) *view.PublishPage {
+func (c *Publish) GetView(p tview.Primitive) *view.Publish {
 	return c.view
 }
 
-func (c *PublishPageController) OnChangeFocus(p tview.Primitive) {
+func (c *Publish) OnChangeFocus(p tview.Primitive) {
 	c.ctrl.Focus(p)
 }
 
-func (c *PublishPageController) OnLaunchEditor() {
+func (c *Publish) OnLaunchEditor() {
 	filename, err := c.ctrl.OnLaunchEditor()
 	if err != nil {
 		// Handle error
@@ -61,20 +61,20 @@ func (c *PublishPageController) OnLaunchEditor() {
 	c.readAndUpdateView(filename)
 }
 
-func (c *PublishPageController) OnOpenFile() {
+func (c *Publish) OnOpenFile() {
 	c.ctrl.Display(openFileViewLabel)
 }
 
-func (c *PublishPageController) OnFileSelected(filename string) {
+func (c *Publish) OnFileSelected(filename string) {
 	c.readAndUpdateView(filename)
 	c.ctrl.Hide(openFileViewLabel)
 	c.ctrl.Display(publishPageLabel)
 }
 
-func (c *PublishPageController) OnError(err error) {
+func (c *Publish) OnError(err error) {
 }
 
-func (c *PublishPageController) readAndUpdateView(filename string) {
+func (c *Publish) readAndUpdateView(filename string) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		// Handle error
@@ -83,10 +83,10 @@ func (c *PublishPageController) readAndUpdateView(filename string) {
 	c.view.SetData(data)
 }
 
-func (c *PublishPageController) Publish(topic string, qos network.Qos, retained bool, message []byte) error {
+func (c *Publish) Publish(topic string, qos network.Qos, retained bool, message []byte) error {
 	return c.ctrl.Publish(topic, qos, retained, message)
 }
 
-func (c *PublishPageController) Cancel() {
+func (c *Publish) Cancel() {
 	c.ctrl.Hide(publishPageLabel)
 }

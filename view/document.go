@@ -8,15 +8,15 @@ import (
 )
 
 type (
-	DocumentView struct {
+	Document struct {
 		*tview.TextView
 
 		doc *model.Document
 	}
 )
 
-func NewDocumentView() *DocumentView {
-	d := &DocumentView{
+func NewDocumentView() *Document {
+	d := &Document{
 		TextView: tview.NewTextView(),
 		doc:      model.NewDocument(),
 	}
@@ -25,15 +25,15 @@ func NewDocumentView() *DocumentView {
 	return d
 }
 
-func (v *DocumentView) SetRenderer(r model.Renderer) {
+func (v *Document) SetRenderer(r model.Renderer) {
 	v.doc.SetRenderer(r)
 }
 
-func (v *DocumentView) SetDocument(d *data.Document) {
+func (v *Document) SetDocument(d *data.Document) {
 	v.doc.SetDocument(d)
 }
 
-func (v *DocumentView) Refresh() {
+func (v *Document) Refresh() {
 	v.TextView.Clear()
 
 	text, colorized := v.doc.Contents()

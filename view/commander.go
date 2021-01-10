@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	MainPageController interface {
+	CommanderController interface {
 		OnTopicSelected(t string)
 		OnChangeFocus(p tview.Primitive)
 		OnNextDocument()
@@ -20,19 +20,19 @@ type (
 		OnSetFollow(enabled bool)
 	}
 
-	MainPage struct {
+	Commander struct {
 		*tview.Flex
-		ctrl MainPageController
+		ctrl CommanderController
 
 		topics            *tview.List
-		docView           *DocumentView
+		docView           *Document
 		documents         *model.DocumentStore
 		scrollToBeginning bool
 	}
 )
 
-func NewMainPage(ctrl MainPageController) *MainPage {
-	p := &MainPage{
+func NewMainPage(ctrl CommanderController) *Commander {
+	c := &Commander{
 		Flex:    tview.NewFlex(),
 		topics:  tview.NewList(),
 		docView: NewDocumentView(),
@@ -40,29 +40,29 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 	}
 
 	/* Topics list */
-	p.topics.SetBorder(true).SetTitle("Topics")
-	p.topics.ShowSecondaryText(false)
-	p.topics.SetChangedFunc(func(index int, mainText, secondaryText string, short rune) {
-		p.ctrl.OnTopicSelected(mainText)
+	c.topics.SetBorder(true).SetTitle("Topics")
+	c.topics.ShowSecondaryText(false)
+	c.topics.SetChangedFunc(func(index int, mainText, secondaryText string, short rune) {
+		c.ctrl.OnTopicSelected(mainText)
 	})
 
 	scrollToTopCheckbox := tview.NewCheckbox().
 		SetLabel("Scroll to top: ").
-		SetChangedFunc(func(checked bool) { p.scrollToBeginning = checked })
+		SetChangedFunc(func(checked bool) { c.scrollToBeginning = checked })
 
 	followCheckbox := tview.NewCheckbox().
 		SetLabel("Follow: ").
 		SetChangedFunc(ctrl.OnSetFollow)
 
-	renderersView := NewRendererPage().
+	renderersView := NewDocumentRenderer().
 		SetRenderers([]model.Renderer{
 			model.NewRawRenderer(),
 			model.NewHexRenderer(),
 			model.NewJsonRenderer(),
 		}).
 		SetSelectedFunc(func(renderer model.Renderer) {
-			p.docView.SetRenderer(renderer)
-			p.Refresh()
+			c.docView.SetRenderer(renderer)
+			c.Refresh()
 		})
 	controlsFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	controlsFlex.SetBorder(true).SetTitle("Controls")
@@ -72,34 +72,34 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 
 	columnsFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
-		AddItem(p.topics, 0, 1, true).
-		AddItem(p.docView, 0, 3, false).
+		AddItem(c.topics, 0, 1, true).
+		AddItem(c.docView, 0, 3, false).
 		AddItem(controlsFlex, 0, 1, false)
-	fc := NewFocusChain(p.topics, p.docView, renderersView, scrollToTopCheckbox, followCheckbox)
+	fc := NewFocusChain(c.topics, c.docView, renderersView, scrollToTopCheckbox, followCheckbox)
 
 	columnsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
-			p.ctrl.OnChangeFocus(fc.Next())
+			c.ctrl.OnChangeFocus(fc.Next())
 		case tcell.KeyBacktab:
-			p.ctrl.OnChangeFocus(fc.Prev())
+			c.ctrl.OnChangeFocus(fc.Prev())
 		case tcell.KeyRight:
-			p.ctrl.OnNextDocument()
+			c.ctrl.OnNextDocument()
 		case tcell.KeyLeft:
-			p.ctrl.OnPrevDocument()
+			c.ctrl.OnPrevDocument()
 		}
 
 		switch event.Rune() {
 		case 'f', 'F':
-			p.ctrl.OnSubscribe()
+			c.ctrl.OnSubscribe()
 		case 'p', 'P':
-			p.ctrl.OnPublish()
+			c.ctrl.OnPublish()
 		}
 
 		return event
 	})
 
-	p.Flex = tview.NewFlex().
+	c.Flex = tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
@@ -107,26 +107,26 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters  [blue](P):[-] publish"),
 			1, 0, false)
 
-	return p
+	return c
 }
 
-func (p *MainPage) SetDocumentStore(documents *model.DocumentStore) {
-	p.documents = documents
+func (c *Commander) SetDocumentStore(documents *model.DocumentStore) {
+	c.documents = documents
 }
 
-func (p *MainPage) Focus(delegate func(p tview.Primitive)) {
-	p.Flex.SetFullScreen(true)
-	delegate(p.Flex)
+func (c *Commander) Focus(delegate func(p tview.Primitive)) {
+	c.Flex.SetFullScreen(true)
+	delegate(c.Flex)
 }
 
-func (p *MainPage) AddTopic(t string) {
+func (c *Commander) AddTopic(t string) {
 	const (
 		subStringMatch  = ""
 		mustContainBoth = false
 		ignoreCase      = false
 	)
 
-	if p.topics.FindItems(t, subStringMatch, mustContainBoth, ignoreCase) != nil {
+	if c.topics.FindItems(t, subStringMatch, mustContainBoth, ignoreCase) != nil {
 		return
 	}
 
@@ -135,7 +135,7 @@ func (p *MainPage) AddTopic(t string) {
 		shortCut      = 0
 	)
 
-	p.topics.AddItem(t, secondaryText, shortCut, nil)
+	c.topics.AddItem(t, secondaryText, shortCut, nil)
 	/*
 		p.topics.AddItem(t, secondaryText, shortCut, func() {
 			p.ctrl.OnTopicSelected(t)
@@ -143,30 +143,30 @@ func (p *MainPage) AddTopic(t string) {
 	*/
 }
 
-func (p *MainPage) SetDocumentTitle(title string) {
-	p.docView.SetTitle(title)
+func (c *Commander) SetDocumentTitle(title string) {
+	c.docView.SetTitle(title)
 }
 
-func (p *MainPage) SetTopicsTitle(title string) {
-	p.topics.SetTitle(title)
+func (c *Commander) SetTopicsTitle(title string) {
+	c.topics.SetTitle(title)
 }
 
-func (p *MainPage) Refresh() {
+func (c *Commander) Refresh() {
 
-	t, index := p.documents.Current()
-	p.SetTopicsTitle(fmt.Sprintf("Topics %d", p.documents.Len()))
+	t, index := c.documents.Current()
+	c.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
 	if index == nil {
-		p.SetDocumentTitle("Document (none)")
+		c.SetDocumentTitle("Document (none)")
 		return
 	}
 
 	i, d := index.Current()
-	p.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
+	c.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 
-	p.docView.SetDocument(d)
-	p.docView.Refresh()
-	if p.scrollToBeginning {
-		p.docView.ScrollToBeginning()
+	c.docView.SetDocument(d)
+	c.docView.Refresh()
+	if c.scrollToBeginning {
+		c.docView.ScrollToBeginning()
 	}
 
 }

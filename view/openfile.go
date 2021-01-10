@@ -6,18 +6,18 @@ import (
 )
 
 type (
-	OpenFileViewController interface {
+	OpenFileController interface {
 		OnFileSelected(filename string)
 		OnOpenCancelled()
 	}
 
-	OpenFileView struct {
+	OpenFile struct {
 		*tview.Flex
 		browser *widget.FileBrowser
 	}
 )
 
-func NewOpenFileView(root string) *OpenFileView {
+func NewOpenFile(root string) *OpenFile {
 
 	b := widget.NewFileBrowser()
 	b.SetDir(root)
@@ -41,18 +41,18 @@ func NewOpenFileView(root string) *OpenFileView {
 	flex.SetTitle("Open file").
 		SetBorder(true)
 
-	return &OpenFileView{
+	return &OpenFile{
 		Flex:    flex,
 		browser: b,
 	}
 }
 
-func (v *OpenFileView) SetOnFileSelected(handle func(filename string)) *OpenFileView {
+func (v *OpenFile) SetOnFileSelected(handle func(filename string)) *OpenFile {
 	v.browser.SetOnFileSelected(handle)
 	return v
 }
 
-func (v *OpenFileView) SetOnError(handle func(err error)) *OpenFileView {
+func (v *OpenFile) SetOnError(handle func(err error)) *OpenFile {
 	v.browser.SetOnError(handle)
 	return v
 }

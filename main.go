@@ -13,6 +13,6 @@ func main() {
 	//c.subscribe("hamweather/#", QosAtLeastOnce)
 	//c.subscribe("#", QosAtLeastOnce)
 
-	ui := control.NewMqttUI(c)
+	ui := control.NewMqttApp(c)
 	ui.Start()
 }

@@ -15,8 +15,8 @@ func hex(b byte) []byte {
 
 }
 
-func toPrintable(b byte) byte {
-	if (b >= ' ' && b <= '~') || (b == '\r' || b == '\n') {
+func toPrintableNotCrLf(b byte) byte {
+	if b >= ' ' && b <= '~' {
 		return b
 	}
 
@@ -86,7 +86,7 @@ func (r *HexRenderer) Render(data []byte) ([]byte, bool) {
 		}
 
 		for j := 0; j < l; j++ {
-			r.sb.WriteByte(toPrintable(data[i+j]))
+			r.sb.WriteByte(toPrintableNotCrLf(data[i+j]))
 			r.sb.Write(padding[j][0 : len(padding[j])-1])
 		}
 	}

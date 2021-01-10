@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	PublishPageControl interface {
+	PublishControl interface {
 		OnChangeFocus(p tview.Primitive)
 		OnLaunchEditor()
 		OnOpenFile()
@@ -17,23 +17,23 @@ type (
 		Cancel()
 	}
 
-	PublishPage struct {
+	Publish struct {
 		*tview.Flex
-		ctrl     PublishPageControl
+		ctrl     PublishControl
 		dataView *tview.TextView
 		data     []byte
 		renderer model.Renderer
 	}
 )
 
-func NewPublishPage(ctrl PublishPageControl) *PublishPage {
+func NewPublish(ctrl PublishControl) *Publish {
 	const (
 		topicLabel    = "Topic"
 		qosLabel      = "Qos"
 		retainedLabel = "Retained"
 		topicWidth    = 32
 	)
-	p := &PublishPage{
+	p := &Publish{
 		ctrl:     ctrl,
 		renderer: model.NewRawRenderer(),
 	}
@@ -117,7 +117,7 @@ func NewPublishPage(ctrl PublishPageControl) *PublishPage {
 	return p
 }
 
-func (p *PublishPage) SetData(data []byte) {
+func (p *Publish) SetData(data []byte) {
 	p.dataView.Clear()
 	printable, _ := p.renderer.Render(data)
 	p.dataView.Write(printable)

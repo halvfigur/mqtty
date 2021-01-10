@@ -9,18 +9,18 @@ import (
 )
 
 type (
-	StartPageController interface {
+	ConnectorController interface {
 		OnConnect(host string, port int, username, password string) error
 		Stop()
 	}
 
-	StartPage struct {
+	Connector struct {
 		*tview.Flex
-		ctrl StartPageController
+		ctrl ConnectorController
 	}
 )
 
-func NewStartPage(ctrl StartPageController) *StartPage {
+func NewConnector(ctrl ConnectorController) *Connector {
 	const (
 		hostLabel     = "Host"
 		portLabel     = "Port"
@@ -36,7 +36,7 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	username := ""
 	password := ""
 
-	p := &StartPage{
+	p := &Connector{
 		ctrl: ctrl,
 	}
 

@@ -44,19 +44,19 @@ type (
 		ViewController
 	}
 
-	MqttUI struct {
+	MqttApp struct {
 		c     *network.MqttClient
 		app   *tview.Application
 		pages *tview.Pages
-		main  *MainPageController
+		main  *CommanderController
 	}
 )
 
-func NewMqttUI(c *network.MqttClient) *MqttUI {
+func NewMqttApp(c *network.MqttClient) *MqttApp {
 	tview.Styles.TitleColor = tcell.ColorBlue
 	app := tview.NewApplication()
 
-	u := &MqttUI{
+	u := &MqttApp{
 		c:     c,
 		app:   app,
 		pages: tview.NewPages(),
@@ -67,63 +67,63 @@ func NewMqttUI(c *network.MqttClient) *MqttUI {
 	return u
 }
 
-func (u *MqttUI) Connect(host string, port int, username, password string) error {
-	if err := u.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password); err != nil {
+func (a *MqttApp) Connect(host string, port int, username, password string) error {
+	if err := a.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password); err != nil {
 		return err
 	}
-	u.Display(mainPageLabel)
+	a.Display(commanderLabel)
 	return nil
 }
 
-func (u *MqttUI) Subscribe(filter string, qos network.Qos) error {
-	return u.c.Subscribe(filter, qos)
+func (a *MqttApp) Subscribe(filter string, qos network.Qos) error {
+	return a.c.Subscribe(filter, qos)
 }
 
-func (u *MqttUI) Unsubscribe(filter string) error {
-	return u.c.Unsubscribe(filter)
+func (a *MqttApp) Unsubscribe(filter string) error {
+	return a.c.Unsubscribe(filter)
 }
 
-func (u *MqttUI) Publish(topic string, qos network.Qos, retained bool, message []byte) error {
-	return u.c.Publish(topic, qos, retained, message)
+func (a *MqttApp) Publish(topic string, qos network.Qos, retained bool, message []byte) error {
+	return a.c.Publish(topic, qos, retained, message)
 }
 
-func (u *MqttUI) Register(pageLabel string, p tview.Primitive, visible bool) {
-	u.pages.AddPage(pageLabel, p, true, visible)
+func (a *MqttApp) Register(pageLabel string, p tview.Primitive, visible bool) {
+	a.pages.AddPage(pageLabel, p, true, visible)
 }
 
-func (u *MqttUI) Display(pageLabel string) {
-	u.pages.SendToFront(pageLabel)
-	u.pages.ShowPage(pageLabel)
+func (a *MqttApp) Display(pageLabel string) {
+	a.pages.SendToFront(pageLabel)
+	a.pages.ShowPage(pageLabel)
 }
 
-func (u *MqttUI) OnConnect() {
-	u.Display(startPageLabel)
+func (a *MqttApp) OnConnect() {
+	a.Display(connectorLabel)
 }
 
-func (u *MqttUI) OnSubscribe() {
-	u.Display(subscriptionFiltersViewLabel)
+func (a *MqttApp) OnSubscribe() {
+	a.Display(filtersLabel)
 }
 
-func (u *MqttUI) OnPublish() {
-	u.Display(publishPageLabel)
+func (a *MqttApp) OnPublish() {
+	a.Display(publishPageLabel)
 }
 
-func (u *MqttUI) Hide(pageLabel string) {
-	u.pages.HidePage(pageLabel)
+func (a *MqttApp) Hide(pageLabel string) {
+	a.pages.HidePage(pageLabel)
 }
 
-func (u *MqttUI) Focus(p tview.Primitive) {
-	u.app.SetFocus(p)
+func (a *MqttApp) Focus(p tview.Primitive) {
+	a.app.SetFocus(p)
 }
 
-func (u *MqttUI) OnLaunchEditor() (string, error) {
+func (a *MqttApp) OnLaunchEditor() (string, error) {
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "mqtty-")
 	if err != nil {
 		return "", err
 	}
 	defer tmpFile.Close()
 
-	u.app.Suspend(func() {
+	a.app.Suspend(func() {
 		cmd := exec.Command("/usr/bin/nvim", tmpFile.Name())
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -138,35 +138,35 @@ func (u *MqttUI) OnLaunchEditor() (string, error) {
 	return tmpFile.Name(), nil
 }
 
-func (u *MqttUI) OnStop() {
-	u.Stop()
+func (a *MqttApp) OnStop() {
+	a.Stop()
 }
 
-func (u *MqttUI) Stop() {
-	u.app.Stop()
+func (a *MqttApp) Stop() {
+	a.app.Stop()
 }
 
-func (u *MqttUI) Cancel() {
-	name, _ := u.pages.GetFrontPage()
-	u.pages.HidePage(name)
+func (a *MqttApp) Cancel() {
+	name, _ := a.pages.GetFrontPage()
+	a.pages.HidePage(name)
 }
 
-func (u *MqttUI) Start() {
-	u.Display(startPageLabel)
+func (a *MqttApp) Start() {
+	a.Display(connectorLabel)
 
-	u.app.SetRoot(u.pages, true)
+	a.app.SetRoot(a.pages, true)
 
 	go func() {
 		/* This goroutine will exit when the incomming channel is closed */
-		for m := range u.c.Incomming() {
-			u.app.QueueUpdateDraw(func() {
+		for m := range a.c.Incomming() {
+			a.app.QueueUpdateDraw(func() {
 				doc := data.NewDocumentBytes(m.Payload())
-				u.main.AddDocument(m.Topic(), doc)
+				a.main.AddDocument(m.Topic(), doc)
 			})
 		}
 	}()
 
-	if err := u.app.Run(); err != nil {
+	if err := a.app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

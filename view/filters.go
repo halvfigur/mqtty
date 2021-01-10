@@ -12,21 +12,21 @@ import (
 const filterMaxWidth = 32
 
 type (
-	SubscriptionFiltersViewController interface {
+	FiltersController interface {
 		Subscribe(topic string, qos network.Qos) error
 		Unsubscribe(topic string) error
 		OnChangeFocus(p tview.Primitive)
 		Cancel()
 	}
 
-	SubscriptionFiltersView struct {
+	Filters struct {
 		*tview.Flex
 		filters *tview.List
 		model   *model.SubscriptionFilters
 	}
 )
 
-func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *SubscriptionFiltersView {
+func NewFilters(ctrl FiltersController) *Filters {
 	filterInput := tview.NewInputField().
 		SetLabel("[blue]Filter:[-] ").
 		SetFieldWidth(filterMaxWidth).
@@ -134,25 +134,25 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 		return event
 	})
 
-	return &SubscriptionFiltersView{
+	return &Filters{
 		Flex:    Center(viewFlex, 1, 1),
 		filters: filterList,
 	}
 }
 
-func (v *SubscriptionFiltersView) SetSubscriptionFilters(filters *model.SubscriptionFilters) {
-	v.model = filters
+func (f *Filters) SetSubscriptionFilters(filters *model.SubscriptionFilters) {
+	f.model = filters
 
 	maxLen := 0
-	for _, f := range v.model.Filters() {
+	for _, f := range f.model.Filters() {
 		if l := len(f.Name()); l > maxLen {
 			maxLen = l
 		}
 	}
 
-	v.filters.Clear()
-	v.filters.ShowSecondaryText(false)
-	for _, f := range v.model.Filters() {
-		v.filters.AddItem(f.Name(), "", 0, nil)
+	f.filters.Clear()
+	f.filters.ShowSecondaryText(false)
+	for _, filter := range f.model.Filters() {
+		f.filters.AddItem(filter.Name(), "", 0, nil)
 	}
 }

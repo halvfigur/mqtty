@@ -9,6 +9,14 @@ type (
 	RawRenderer struct{}
 )
 
+func toPrintable(b byte) byte {
+	if (b >= ' ' && b <= '~') || (b == '\r' || b == '\n') {
+		return b
+	}
+
+	return '.'
+}
+
 func NewRawRenderer() *RawRenderer {
 	return new(RawRenderer)
 }
