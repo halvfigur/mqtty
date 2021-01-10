@@ -69,7 +69,10 @@ func (c *MainPageController) OnPrevDocument() {
 
 func (c *MainPageController) OnSubscribe() {
 	c.ctrl.OnSubscribe()
-	c.ctrl.Display(subscriptionFiltersViewLabel)
+}
+
+func (c *MainPageController) OnPublish() {
+	c.ctrl.OnPublish()
 }
 
 func (c *MainPageController) OnSetScrollToTop(enabled bool) {

@@ -92,6 +92,7 @@ func (u *MqttUI) Register(pageLabel string, p tview.Primitive, visible bool) {
 }
 
 func (u *MqttUI) Display(pageLabel string) {
+	u.pages.SendToFront(pageLabel)
 	u.pages.ShowPage(pageLabel)
 }
 
@@ -104,8 +105,7 @@ func (u *MqttUI) OnSubscribe() {
 }
 
 func (u *MqttUI) OnPublish() {
-	// TODO
-	//u.Display(subscriptionFiltersViewLabel)
+	u.Display(publishPageLabel)
 }
 
 func (u *MqttUI) Hide(pageLabel string) {
@@ -152,9 +152,7 @@ func (u *MqttUI) Cancel() {
 }
 
 func (u *MqttUI) Start() {
-	//u.Display(mainPageLabel)
-	//u.Display(startPageLabel)
-	u.Display(publishPageLabel)
+	u.Display(startPageLabel)
 
 	u.app.SetRoot(u.pages, true)
 

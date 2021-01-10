@@ -16,6 +16,7 @@ type (
 		OnPrevDocument()
 		OnConnect()
 		OnSubscribe()
+		OnPublish()
 		OnSetFollow(enabled bool)
 	}
 
@@ -91,6 +92,8 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 		switch event.Rune() {
 		case 'f', 'F':
 			p.ctrl.OnSubscribe()
+		case 'p', 'P':
+			p.ctrl.OnPublish()
 		}
 
 		return event
@@ -101,7 +104,7 @@ func NewMainPage(ctrl MainPageController) *MainPage {
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters"),
+			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters  [blue](P):[-] publish"),
 			1, 0, false)
 
 	return p
