@@ -136,32 +136,27 @@ func (c *Commander) AddTopic(t string) {
 	)
 
 	c.topics.AddItem(t, secondaryText, shortCut, nil)
-	/*
-		p.topics.AddItem(t, secondaryText, shortCut, func() {
-			p.ctrl.OnTopicSelected(t)
-		})
-	*/
 }
 
-func (c *Commander) SetDocumentTitle(title string) {
+func (c *Commander) setDocumentTitle(title string) {
 	c.docView.SetTitle(title)
 }
 
-func (c *Commander) SetTopicsTitle(title string) {
+func (c *Commander) setTopicsTitle(title string) {
 	c.topics.SetTitle(title)
 }
 
 func (c *Commander) Refresh() {
 
 	t, index := c.documents.Current()
-	c.SetTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
+	c.setTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
 	if index == nil {
-		c.SetDocumentTitle("Document (none)")
+		c.setDocumentTitle("Document (none)")
 		return
 	}
 
 	i, d := index.Current()
-	c.SetDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
+	c.setDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 
 	c.docView.SetDocument(d)
 	c.docView.Refresh()

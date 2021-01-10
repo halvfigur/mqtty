@@ -155,19 +155,6 @@ func (s *DocumentStore) Current() (string, *DocumentIndex) {
 	return s.current, s.index[s.current]
 }
 
-/*
-func (s *DocumentStore) Current() (string, *data.Document) {
-	index := s.index[s.current]
-	if index == nil {
-		return "", nil
-	}
-
-	_, doc := index.Current()
-
-	return s.current, doc
-}
-*/
-
 func (s *DocumentStore) Len() int {
 	return len(s.index)
 }

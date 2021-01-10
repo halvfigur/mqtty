@@ -13,7 +13,8 @@ type (
 		OnChangeFocus(p tview.Primitive)
 		OnLaunchEditor()
 		OnOpenFile()
-		Publish(topic string, qos network.Qos, retained bool, message []byte) error
+		OnOpenHistory()
+		OnPublish(topic string, qos network.Qos, retained bool, message []byte) error
 		Cancel()
 	}
 
@@ -53,9 +54,15 @@ func NewPublish(ctrl PublishControl) *Publish {
 		SetSelectedFunc(func() {
 			ctrl.OnOpenFile()
 		})
+	openHistoryButton := tview.NewButton("History").
+		SetSelectedFunc(func() {
+			ctrl.OnOpenHistory()
+		})
 	p.dataView = tview.NewTextView()
 
-	fc := NewFocusChain(topicField, qosDropDown, retainedCheckbox, launchEditorButton, openFileButton)
+	fc := NewFocusChain(topicField, qosDropDown, retainedCheckbox,
+		launchEditorButton, openFileButton, openHistoryButton)
+
 	publishButton := tview.NewButton("Publish").
 		SetSelectedFunc(func() {
 			if topicField.GetText() == "" {
@@ -77,7 +84,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 
 			retained := retainedCheckbox.IsChecked()
 
-			if err := ctrl.Publish(topic, qos, retained, p.data); err != nil {
+			if err := ctrl.OnPublish(topic, qos, retained, p.data); err != nil {
 				// TODO handle error
 			}
 		})
@@ -90,6 +97,8 @@ func NewPublish(ctrl PublishControl) *Publish {
 		AddItem(launchEditorButton, 0, 1, false).
 		AddItem(nil, 0, 1, false).
 		AddItem(openFileButton, 0, 1, false).
+		AddItem(nil, 0, 1, false).
+		AddItem(openHistoryButton, 0, 1, false).
 		AddItem(nil, 0, 1, false)
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)

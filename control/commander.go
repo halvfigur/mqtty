@@ -8,26 +8,20 @@ import (
 	"github.com/halvfigur/mqtty/view"
 )
 
-const (
-	commanderLabel = "commander"
-)
+const commanderLabel = "commander"
 
-type (
-	CommanderController struct {
-		ctrl        Control
-		mainView    *view.Commander
-		connectCtrl *Connector
-		filtersCtrl *Filters
-		publishCtrl *Publish
-		docModel    *model.Document
-		documents   *model.DocumentStore
-	}
-)
+type CommanderController struct {
+	ctrl        Control
+	mainView    *view.Commander
+	connectCtrl *Connector
+	filtersCtrl *Filters
+	publishCtrl *Publish
+	documents   *model.DocumentStore
+}
 
 func NewMainPageController(ctrl Control) *CommanderController {
 	c := &CommanderController{
 		ctrl:      ctrl,
-		docModel:  model.NewDocument(),
 		documents: model.NewDocumentStore(),
 	}
 
