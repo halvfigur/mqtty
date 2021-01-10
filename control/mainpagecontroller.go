@@ -18,6 +18,7 @@ type (
 		mainView    *view.MainPage
 		connectCtrl *StartPageController
 		filtersCtrl *SubscriptionFiltersViewController
+		publishCtrl *PublishPageController
 		docModel    *model.Document
 		documents   *model.DocumentStore
 	}
@@ -35,10 +36,9 @@ func NewMainPageController(ctrl Control) *MainPageController {
 
 	c.connectCtrl = NewStartPageController(ctrl)
 	c.filtersCtrl = NewSubscriptionFiltersViewController(ctrl)
+	c.publishCtrl = NewPublishPageController(ctrl)
 
 	ctrl.Register(mainPageLabel, c.mainView, false)
-	ctrl.Register(subscriptionFiltersViewLabel, c.filtersCtrl.GetView(), false)
-	ctrl.Register(startPageLabel, c.connectCtrl.GetView(), false)
 
 	return c
 }

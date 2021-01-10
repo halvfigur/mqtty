@@ -111,15 +111,3 @@ func (r *RadioButtons) MouseHandler() func(action tview.MouseAction, event *tcel
 		return
 	})
 }
-
-/*
-func main() {
-	radioButtons := NewRadioButtons([]string{"Lions", "Elephants", "Giraffes"})
-	radioButtons.SetBorder(true).
-		SetTitle("Radio Button Demo").
-		SetRect(0, 0, 30, 5)
-	if err := tview.NewApplication().SetRoot(radioButtons, false).EnableMouse(true).Run(); err != nil {
-		panic(err)
-	}
-}
-*/

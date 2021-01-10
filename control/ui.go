@@ -2,7 +2,10 @@ package control
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/exec"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -15,6 +18,8 @@ type (
 	AppController interface {
 		OnConnect()
 		OnSubscribe()
+		OnPublish()
+		OnLaunchEditor() (string, error)
 		Stop()
 	}
 
@@ -22,6 +27,7 @@ type (
 		Connect(host string, port int, username, password string) error
 		Subscribe(topic string, qos network.Qos) error
 		Unsubscribe(topic string) error
+		Publish(topic string, qos network.Qos, retained bool, message []byte) error
 	}
 
 	ViewController interface {
@@ -77,6 +83,10 @@ func (u *MqttUI) Unsubscribe(filter string) error {
 	return u.c.Unsubscribe(filter)
 }
 
+func (u *MqttUI) Publish(topic string, qos network.Qos, retained bool, message []byte) error {
+	return u.c.Publish(topic, qos, retained, message)
+}
+
 func (u *MqttUI) Register(pageLabel string, p tview.Primitive, visible bool) {
 	u.pages.AddPage(pageLabel, p, true, visible)
 }
@@ -93,12 +103,39 @@ func (u *MqttUI) OnSubscribe() {
 	u.Display(subscriptionFiltersViewLabel)
 }
 
+func (u *MqttUI) OnPublish() {
+	// TODO
+	//u.Display(subscriptionFiltersViewLabel)
+}
+
 func (u *MqttUI) Hide(pageLabel string) {
 	u.pages.HidePage(pageLabel)
 }
 
 func (u *MqttUI) Focus(p tview.Primitive) {
 	u.app.SetFocus(p)
+}
+
+func (u *MqttUI) OnLaunchEditor() (string, error) {
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "mqtty-")
+	if err != nil {
+		return "", err
+	}
+	defer tmpFile.Close()
+
+	u.app.Suspend(func() {
+		cmd := exec.Command("/usr/bin/nvim", tmpFile.Name())
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return tmpFile.Name(), nil
 }
 
 func (u *MqttUI) OnStop() {
@@ -115,8 +152,9 @@ func (u *MqttUI) Cancel() {
 }
 
 func (u *MqttUI) Start() {
-	u.Display(mainPageLabel)
-	u.Display(startPageLabel)
+	//u.Display(mainPageLabel)
+	//u.Display(startPageLabel)
+	u.Display(publishPageLabel)
 
 	u.app.SetRoot(u.pages, true)
 

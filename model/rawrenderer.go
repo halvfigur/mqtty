@@ -18,5 +18,11 @@ func (r *RawRenderer) Name() string {
 }
 
 func (r *RawRenderer) Render(data []byte) ([]byte, bool) {
-	return data, false
+	printable := make([]byte, len(data))
+
+	for i, b := range data {
+		printable[i] = toPrintable(b)
+	}
+
+	return printable, false
 }

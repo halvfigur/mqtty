@@ -4,12 +4,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-type (
-	FocusChain struct {
-		items []tview.Primitive
-		index int
-	}
-)
+type FocusChain struct {
+	items []tview.Primitive
+	index int
+}
 
 func NewFocusChain(items ...tview.Primitive) *FocusChain {
 	return &FocusChain{
