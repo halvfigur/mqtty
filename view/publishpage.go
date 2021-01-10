@@ -12,6 +12,7 @@ type (
 	PublishPageControl interface {
 		OnChangeFocus(p tview.Primitive)
 		OnLaunchEditor()
+		OnOpenFile()
 		Publish(topic string, qos network.Qos, retained bool, message []byte) error
 		Cancel()
 	}
@@ -50,6 +51,7 @@ func NewPublishPage(ctrl PublishPageControl) *PublishPage {
 		})
 	openFileButton := tview.NewButton("Open file").
 		SetSelectedFunc(func() {
+			ctrl.OnOpenFile()
 		})
 	p.dataView = tview.NewTextView()
 
@@ -84,8 +86,11 @@ func NewPublishPage(ctrl PublishPageControl) *PublishPage {
 
 	buttonFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
+		AddItem(nil, 0, 1, false).
 		AddItem(launchEditorButton, 0, 1, false).
-		AddItem(openFileButton, 0, 1, false)
+		AddItem(nil, 0, 1, false).
+		AddItem(openFileButton, 0, 1, false).
+		AddItem(nil, 0, 1, false)
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.SetTitle("Publish").SetBorder(true)
@@ -108,7 +113,7 @@ func NewPublishPage(ctrl PublishPageControl) *PublishPage {
 
 		return event
 	})
-	p.Flex = center(flex, 3, 2)
+	p.Flex = Center(flex, 3, 2)
 	return p
 }
 

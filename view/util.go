@@ -35,7 +35,7 @@ func (c *FocusChain) Reset() tview.Primitive {
 	return c.items[c.index]
 }
 
-func center(p tview.Primitive, rowProportion, colProportion int) *tview.Flex {
+func Center(p tview.Primitive, rowProportion, colProportion int) *tview.Flex {
 	cols := tview.NewFlex().SetDirection(tview.FlexColumn).
 		AddItem(nil, 0, 1, false).
 		AddItem(p, 0, colProportion, true).

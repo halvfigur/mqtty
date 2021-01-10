@@ -104,6 +104,6 @@ func NewStartPage(ctrl StartPageController) *StartPage {
 	flex.AddItem(form, 0, 1, true).
 		AddItem(errorMsgView, 1, 0, false)
 
-	p.Flex = center(flex, 1, 1)
+	p.Flex = Center(flex, 1, 1)
 	return p
 }

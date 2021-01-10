@@ -16,7 +16,7 @@ func hex(b byte) []byte {
 }
 
 func toPrintable(b byte) byte {
-	if b >= ' ' && b <= '~' {
+	if (b >= ' ' && b <= '~') || (b == '\r' || b == '\n') {
 		return b
 	}
 

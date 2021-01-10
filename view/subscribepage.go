@@ -135,7 +135,7 @@ func NewSubscriptionFiltersView(ctrl SubscriptionFiltersViewController) *Subscri
 	})
 
 	return &SubscriptionFiltersView{
-		Flex:    center(viewFlex, 1, 1),
+		Flex:    Center(viewFlex, 1, 1),
 		filters: filterList,
 	}
 }
