@@ -1,6 +1,11 @@
 package model
 
-import "github.com/halvfigur/mqtty/data"
+import (
+	"sort"
+	"strings"
+
+	"github.com/halvfigur/mqtty/data"
+)
 
 type DocumentIndex struct {
 	current   int
@@ -153,6 +158,20 @@ func (s *DocumentStore) Store(t string, d *data.Document) {
 
 func (s *DocumentStore) Current() (string, *DocumentIndex) {
 	return s.current, s.index[s.current]
+}
+
+func (s *DocumentStore) Topics() []string {
+	topics := make([]string, 0, len(s.index))
+
+	for t := range s.index {
+		topics = append(topics, t)
+	}
+
+	sort.Slice(topics, func(i, j int) bool {
+		return strings.Compare(topics[i], topics[j]) < 0
+	})
+
+	return topics
 }
 
 func (s *DocumentStore) Len() int {

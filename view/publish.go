@@ -87,6 +87,8 @@ func NewPublish(ctrl PublishControl) *Publish {
 			if err := ctrl.OnPublish(topic, qos, retained, p.data); err != nil {
 				// TODO handle error
 			}
+
+			fc.Reset()
 		})
 
 	fc.Add(publishButton)

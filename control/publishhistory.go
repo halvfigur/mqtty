@@ -21,8 +21,7 @@ func NewPublishHistory(ctrl Control) *PublishHistory {
 		documents: model.NewDocumentStore(),
 	}
 
-	c.view = view.NewPublishHistory(c)
-	c.view.SetDocumentStore(c.documents)
+	c.view = view.NewPublishHistory(c, c.documents)
 
 	ctrl.Register(publishHistoryLabel, c.view, false)
 

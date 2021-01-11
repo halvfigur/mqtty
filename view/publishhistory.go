@@ -1,6 +1,8 @@
 package view
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/data"
 	"github.com/halvfigur/mqtty/model"
@@ -22,19 +24,21 @@ type (
 		*tview.Flex
 		ctrl      PublishHistoryController
 		documents *model.DocumentStore
+
+		topicList    *tview.List
+		documentView *Document
 	}
 )
 
-func NewPublishHistory(ctrl PublishHistoryController) *PublishHistory {
-	h := &PublishHistory{
-		ctrl: ctrl,
-	}
+func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentStore) *PublishHistory {
 
 	topicList := tview.NewList().
-		ShowSecondaryText(false).
+		ShowSecondaryText(false)
+	/*
 		SetChangedFunc(func(index int, mainText, secondaryText string, shortcut rune) {
 			ctrl.OnTopicSelected(mainText)
 		})
+	*/
 	topicList.SetTitle("Topic").
 		SetBorder(true)
 
@@ -44,7 +48,7 @@ func NewPublishHistory(ctrl PublishHistoryController) *PublishHistory {
 
 	loadButton := tview.NewButton("Load").
 		SetSelectedFunc(func() {
-			t, index := h.documents.Current()
+			t, index := documents.Current()
 			if index == nil {
 				return
 			}
@@ -80,18 +84,49 @@ func NewPublishHistory(ctrl PublishHistoryController) *PublishHistory {
 			ctrl.OnChangeFocus(fc.Next())
 		case tcell.KeyBacktab:
 			ctrl.OnChangeFocus(fc.Prev())
+		case tcell.KeyRight:
+			ctrl.OnNextDocument()
+		case tcell.KeyLeft:
+			ctrl.OnPrevDocument()
 		}
 		return event
 	})
 
-	h.Flex = Center(flex, 6, 3)
-
-	return h
+	return &PublishHistory{
+		Flex:         Center(flex, 6, 3),
+		ctrl:         ctrl,
+		documents:    documents,
+		topicList:    topicList,
+		documentView: documentView,
+	}
 }
 
-func (h *PublishHistory) SetDocumentStore(documents *model.DocumentStore) {
-	h.documents = documents
+func (h *PublishHistory) refreshTopics() {
+	h.topicList.SetTitle(fmt.Sprintf("Topics %d", h.documents.Len()))
+
+	h.topicList.Clear()
+	for _, t := range h.documents.Topics() {
+		h.topicList.AddItem(t, "", 0, func() {
+			h.ctrl.OnTopicSelected(t)
+		})
+	}
+}
+
+func (h *PublishHistory) refreshDocument() {
+	t, index := h.documents.Current()
+	if index == nil {
+		h.documentView.SetTitle("Document (none)")
+		return
+	}
+
+	i, d := index.Current()
+	h.documentView.SetTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
+
+	h.documentView.SetDocument(d)
+	h.documentView.Refresh()
 }
 
 func (h *PublishHistory) Refresh() {
+	h.refreshTopics()
+	h.refreshDocument()
 }
