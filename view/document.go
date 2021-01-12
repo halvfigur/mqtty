@@ -21,7 +21,6 @@ func NewDocumentView() *Document {
 		doc:      model.NewDocument(),
 	}
 
-	d.TextView.SetTitle("Document").SetBorder(true)
 	return d
 }
 

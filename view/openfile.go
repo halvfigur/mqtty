@@ -1,14 +1,18 @@
 package view
 
 import (
+	"os"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/widget"
 	"github.com/rivo/tview"
 )
 
 type (
 	OpenFileController interface {
+		OnChangeFocus(p tview.Primitive)
 		OnFileSelected(filename string)
-		OnOpenCancelled()
+		Cancel()
 	}
 
 	OpenFile struct {
@@ -17,34 +21,79 @@ type (
 	}
 )
 
-func NewOpenFile(root string) *OpenFile {
+func NewOpenFile(ctrl OpenFileController) *OpenFile {
 
-	b := widget.NewFileBrowser()
-	b.SetDir(root)
-	openButton := tview.NewButton("Open")
-	cancelButton := tview.NewButton("Cancel")
+	fileBrowser := widget.NewFileBrowser().
+		SetOnFileSelected(func(filename string) {
+			ctrl.OnFileSelected(filename)
+		})
 
-	buttonFlex := tview.NewFlex().
-		SetDirection(tview.FlexColumn).
-		AddItem(nil, 0, 1, false).
-		AddItem(openButton, 0, 1, false).
-		AddItem(nil, 0, 1, false).
-		AddItem(cancelButton, 0, 1, false).
-		AddItem(nil, 0, 1, false)
+	openButton := tview.NewButton("Open").
+		SetSelectedFunc(func() {
+			file := fileBrowser.GetCurrentFile()
+			f, err := os.Open(file)
+			if err != nil {
+				return
+			}
+			defer f.Close()
 
+			info, err := f.Stat()
+			if err != nil {
+				return
+			}
+
+			if info.IsDir() {
+				fileBrowser.SetDir(file)
+				return
+			}
+
+			ctrl.OnFileSelected(file)
+		})
+
+	cancelButton := tview.NewButton("Cancel").
+		SetSelectedFunc(func() {
+			ctrl.Cancel()
+		})
+
+		/*
+			buttonFlex := tview.NewFlex().
+				SetDirection(tview.FlexColumn).
+				AddItem(nil, 0, 1, false).
+				AddItem(openButton, 0, 1, false).
+				AddItem(nil, 0, 1, false).
+				AddItem(cancelButton, 0, 1, false).
+				AddItem(nil, 0, 1, false)
+		*/
+	buttonFlex := Space(tview.FlexColumn, openButton, cancelButton)
+
+	fc := NewFocusChain(fileBrowser, openButton, cancelButton)
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(b, 0, 1, true).
+		AddItem(fileBrowser, 0, 1, true).
 		AddItem(buttonFlex, 1, 0, false)
 
-	//v.Flex = center(flex, 1, 1)
 	flex.SetTitle("Open file").
-		SetBorder(true)
+		SetBorder(true).
+		SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			switch event.Key() {
+			case tcell.KeyTab:
+				ctrl.OnChangeFocus(fc.Next())
+			case tcell.KeyBacktab:
+				ctrl.OnChangeFocus(fc.Prev())
+			}
+
+			return event
+		})
 
 	return &OpenFile{
 		Flex:    flex,
-		browser: b,
+		browser: fileBrowser,
 	}
+}
+
+func (v *OpenFile) SetDir(dir string) *OpenFile {
+	v.browser.SetDir(dir)
+	return v
 }
 
 func (v *OpenFile) SetOnFileSelected(handle func(filename string)) *OpenFile {

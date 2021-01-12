@@ -4,6 +4,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
 	"github.com/halvfigur/mqtty/network"
+	"github.com/halvfigur/mqtty/widget"
 	"github.com/rivo/tview"
 )
 
@@ -92,7 +93,6 @@ func NewFilters(ctrl FiltersController) *Filters {
 		AddItem(clearButton, 0, 1, false)
 
 	filterList := tview.NewList()
-	filterList.SetBorder(true).SetTitle("Current")
 	filterList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDelete:
@@ -108,6 +108,7 @@ func NewFilters(ctrl FiltersController) *Filters {
 	viewFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	viewFlex.SetTitle("Filters").SetBorder(true)
 	viewFlex.AddItem(filterFlex, 3, 0, true)
+	viewFlex.AddItem(widget.NewDivider().SetLabel("Applied"), 1, 0, false)
 	viewFlex.AddItem(filterList, 0, 1, false)
 	viewFlex.AddItem(errorMsgView, 1, 0, false)
 

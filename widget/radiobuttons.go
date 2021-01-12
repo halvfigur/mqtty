@@ -59,11 +59,11 @@ func (r *RadioButtons) Draw(screen tcell.Screen) {
 			radioButton = "\u25c9" // Checked.
 		}
 
-		attribute := ""
+		colorTag := "[white]"
 		if r.Box.HasFocus() && r.currentOption == index {
-			attribute = "::b"
+			colorTag = "[white::u]"
 		}
-		line := fmt.Sprintf(`%s[white%s]  %s`, radioButton, attribute, option)
+		line := fmt.Sprintf(`%s %s%s`, radioButton, colorTag, option)
 		tview.Print(screen, line, x, y+index, width, tview.AlignLeft, tcell.ColorWhite)
 	}
 }

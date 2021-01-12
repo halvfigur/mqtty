@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/data"
 	"github.com/halvfigur/mqtty/model"
+	"github.com/halvfigur/mqtty/widget"
 	"github.com/rivo/tview"
 )
 
@@ -34,17 +35,8 @@ func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentS
 
 	topicList := tview.NewList().
 		ShowSecondaryText(false)
-	/*
-		SetChangedFunc(func(index int, mainText, secondaryText string, shortcut rune) {
-			ctrl.OnTopicSelected(mainText)
-		})
-	*/
-	topicList.SetTitle("Topic").
-		SetBorder(true)
 
 	documentView := NewDocumentView()
-	documentView.SetTitle("Document").
-		SetBorder(true)
 
 	loadButton := tview.NewButton("Load").
 		SetSelectedFunc(func() {
@@ -62,20 +54,16 @@ func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentS
 			ctrl.Cancel()
 		})
 
-	buttonFlex := tview.NewFlex().
-		SetDirection(tview.FlexColumn).
-		AddItem(nil, 0, 1, false).
-		AddItem(loadButton, 0, 1, false).
-		AddItem(nil, 0, 1, false).
-		AddItem(cancelButton, 0, 1, false).
-		AddItem(nil, 0, 1, false)
+	buttonFlex := Space(tview.FlexColumn, loadButton, cancelButton)
 
 	fc := NewFocusChain(topicList, documentView, loadButton, cancelButton)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(topicList, 0, 1, true).
+		AddItem(widget.NewDivider().SetLabel("Document"), 1, 0, false).
 		AddItem(documentView, 0, 3, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(buttonFlex, 1, 0, false)
 
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -90,10 +78,10 @@ func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentS
 			ctrl.OnPrevDocument()
 		}
 		return event
-	})
+	}).SetBorder(true).SetTitle("Topics")
 
 	return &PublishHistory{
-		Flex:         Center(flex, 6, 3),
+		Flex:         Center(flex, 5, 2),
 		ctrl:         ctrl,
 		documents:    documents,
 		topicList:    topicList,
@@ -102,7 +90,7 @@ func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentS
 }
 
 func (h *PublishHistory) refreshTopics() {
-	h.topicList.SetTitle(fmt.Sprintf("Topics %d", h.documents.Len()))
+	h.SetTitle(fmt.Sprintf("Topics %d", h.documents.Len()))
 
 	h.topicList.Clear()
 	for _, t := range h.documents.Topics() {

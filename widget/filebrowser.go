@@ -95,6 +95,11 @@ func (b *FileBrowser) SetDir(dir string) error {
 	return nil
 }
 
+func (b *FileBrowser) GetCurrentFile() string {
+	_, path := b.GetItemText(b.GetCurrentItem())
+	return path
+}
+
 func (b *FileBrowser) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 	return b.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 		curr := b.GetCurrentItem()
@@ -110,7 +115,7 @@ func (b *FileBrowser) InputHandler() func(event *tcell.EventKey, setFocus func(p
 				b.SetCurrentItem(curr + 1)
 			}
 		case tcell.KeyRight, tcell.KeyEnter:
-			_, path := b.GetItemText(curr)
+			_, path := b.GetItemText(b.GetCurrentItem())
 			info, err := b.fileInfo(path)
 			if err != nil {
 				if b.onError != nil {
@@ -127,6 +132,9 @@ func (b *FileBrowser) InputHandler() func(event *tcell.EventKey, setFocus func(p
 			if info.Mode().IsRegular() && b.onFileSelected != nil {
 				b.onFileSelected(path)
 			}
+		case tcell.KeyLeft:
+			parent := filepath.Dir(b.root)
+			b.SetDir(parent)
 		}
 	})
 }

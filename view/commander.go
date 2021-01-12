@@ -39,6 +39,7 @@ func NewCommander(ctrl CommanderController) *Commander {
 		ctrl:    ctrl,
 	}
 
+	c.docView.SetBorder(true)
 	/* Topics list */
 	c.topics.SetBorder(true).SetTitle("Topics")
 	c.topics.ShowSecondaryText(false)
@@ -67,8 +68,8 @@ func NewCommander(ctrl CommanderController) *Commander {
 	controlsFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	controlsFlex.SetBorder(true).SetTitle("Controls")
 	controlsFlex.AddItem(renderersView, 0, 1, false).
-		AddItem(scrollToTopCheckbox, 0, 1, false).
-		AddItem(followCheckbox, 0, 1, false)
+		AddItem(scrollToTopCheckbox, 1, 0, false).
+		AddItem(followCheckbox, 1, 0, false)
 
 	columnsFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
@@ -87,12 +88,9 @@ func NewCommander(ctrl CommanderController) *Commander {
 			c.ctrl.OnNextDocument()
 		case tcell.KeyLeft:
 			c.ctrl.OnPrevDocument()
-		}
-
-		switch event.Rune() {
-		case 'f', 'F':
+		case tcell.KeyCtrlF:
 			c.ctrl.OnSubscribe()
-		case 'p', 'P':
+		case tcell.KeyCtrlP:
 			c.ctrl.OnPublish()
 		}
 
@@ -104,7 +102,7 @@ func NewCommander(ctrl CommanderController) *Commander {
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] navigate  [blue](F):[-] filters  [blue](P):[-] publish"),
+			SetText("[blue](TAB):[-] navigate  [blue](^F):[-] filters  [blue](^P):[-] publish"),
 			1, 0, false)
 
 	return c
@@ -147,9 +145,9 @@ func (c *Commander) setTopicsTitle(title string) {
 }
 
 func (c *Commander) Refresh() {
-
 	t, index := c.documents.Current()
-	c.setTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
+	//c.setTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
+	c.setTopicsTitle(fmt.Sprintf("Topic %d/%d", c.topics.GetCurrentItem()+1, c.topics.GetItemCount()))
 	if index == nil {
 		c.setDocumentTitle("Document (none)")
 		return

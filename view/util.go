@@ -48,3 +48,20 @@ func Center(p tview.Primitive, rowProportion, colProportion int) *tview.Flex {
 	rows.SetBorder(true)
 	return rows
 }
+
+func Space(direction int, ps ...tview.Primitive) *tview.Flex {
+	flex := tview.NewFlex()
+
+	if len(ps) == 0 {
+		return flex
+	}
+
+	flex.SetDirection(direction)
+	for _, p := range ps {
+		flex.AddItem(tview.NewTextView(), 0, 1, false)
+		flex.AddItem(p, 0, 1, false)
+	}
+	flex.AddItem(tview.NewTextView(), 0, 1, false)
+
+	return flex
+}

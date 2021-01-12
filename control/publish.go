@@ -30,7 +30,8 @@ func NewPublish(ctrl Control) *Publish {
 
 	c.view = view.NewPublish(c)
 
-	c.fileView = view.NewOpenFile(cwd).
+	c.fileView = view.NewOpenFile(c).
+		SetDir(cwd).
 		SetOnFileSelected(c.OnFileSelected).
 		SetOnError(c.OnError)
 
@@ -104,5 +105,5 @@ func (c *Publish) QueueUpdate(f func()) {
 }
 
 func (c *Publish) Cancel() {
-	c.ctrl.Hide(publishLabel)
+	c.ctrl.Cancel()
 }

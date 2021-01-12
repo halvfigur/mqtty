@@ -64,42 +64,47 @@ func NewPublish(ctrl PublishControl) *Publish {
 	fc := NewFocusChain(topicField, qosDropDown, retainedCheckbox,
 		launchEditorButton, openFileButton, openHistoryButton)
 
+	publish := func() {
+		if topicField.GetText() == "" {
+			ctrl.OnChangeFocus(fc.Reset())
+		}
+
+		topic := topicField.GetText()
+		o, _ := qosDropDown.GetCurrentOption()
+
+		var qos network.Qos
+		switch o {
+		case 0:
+			qos = network.QosAtMostOnce
+		case 1:
+			qos = network.QosAtLeastOnce
+		case 2:
+			qos = network.QosExatlyOnce
+		}
+
+		retained := retainedCheckbox.IsChecked()
+
+		ctrl.OnPublish(topic, qos, retained, p.data)
+		fc.Reset()
+	}
+
 	publishButton := tview.NewButton("Publish").
-		SetSelectedFunc(func() {
-			if topicField.GetText() == "" {
-				ctrl.OnChangeFocus(fc.Reset())
-			}
-
-			topic := topicField.GetText()
-			o, _ := qosDropDown.GetCurrentOption()
-
-			var qos network.Qos
-			switch o {
-			case 0:
-				qos = network.QosAtMostOnce
-			case 1:
-				qos = network.QosAtLeastOnce
-			case 2:
-				qos = network.QosExatlyOnce
-			}
-
-			retained := retainedCheckbox.IsChecked()
-
-			ctrl.OnPublish(topic, qos, retained, p.data)
-			fc.Reset()
-		})
+		SetSelectedFunc(publish)
 
 	fc.Add(publishButton)
 
-	buttonFlex := tview.NewFlex().
-		SetDirection(tview.FlexColumn).
-		AddItem(nil, 0, 1, false).
-		AddItem(launchEditorButton, 0, 1, false).
-		AddItem(nil, 0, 1, false).
-		AddItem(openFileButton, 0, 1, false).
-		AddItem(nil, 0, 1, false).
-		AddItem(openHistoryButton, 0, 1, false).
-		AddItem(nil, 0, 1, false)
+	/*
+		buttonFlex := tview.NewFlex().
+			SetDirection(tview.FlexColumn).
+			AddItem(nil, 0, 1, false).
+			AddItem(launchEditorButton, 0, 1, false).
+			AddItem(nil, 0, 1, false).
+			AddItem(openFileButton, 0, 1, false).
+			AddItem(nil, 0, 1, false).
+			AddItem(openHistoryButton, 0, 1, false).
+			AddItem(nil, 0, 1, false)
+	*/
+	buttonFlex := Space(tview.FlexColumn, launchEditorButton, openFileButton, openHistoryButton)
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.SetTitle("Publish").SetBorder(true)
@@ -109,7 +114,12 @@ func NewPublish(ctrl PublishControl) *Publish {
 		AddItem(buttonFlex, 1, 0, false).
 		AddItem(widget.NewDivider().SetLabel("Data"), 1, 0, false).
 		AddItem(p.dataView, 0, 1, false).
-		AddItem(publishButton, 1, 1, false)
+		AddItem(publishButton, 1, 1, false).
+		AddItem(tview.NewTextView().
+			SetDynamicColors(true).
+			SetText("[blue](TAB):[-] navigate  [blue](^E):[-] launch editor  [blue](^F):[-] open file  [blue](^H):[-] open history  [blue](^P):[-] publish"),
+			1, 0, false)
+
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
@@ -118,10 +128,19 @@ func NewPublish(ctrl PublishControl) *Publish {
 			ctrl.OnChangeFocus(fc.Prev())
 		case tcell.KeyEscape:
 			ctrl.Cancel()
+		case tcell.KeyCtrlE:
+			ctrl.OnLaunchEditor()
+		case tcell.KeyCtrlF:
+			ctrl.OnOpenFile()
+		case tcell.KeyCtrlH:
+			ctrl.OnOpenHistory()
+		case tcell.KeyCtrlP:
+			publish()
 		}
 
 		return event
 	})
+
 	p.Flex = Center(flex, 3, 2)
 	return p
 }
