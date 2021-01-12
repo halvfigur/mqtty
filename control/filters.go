@@ -7,8 +7,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-const filtersLabel = "filters"
-
 type Filters struct {
 	ctrl    Control
 	view    *view.Filters
@@ -28,28 +26,32 @@ func NewFilters(ctrl Control) *Filters {
 	return f
 }
 
-func (f *Filters) GetView() *view.Filters {
-	return f.view
+func (f *Filters) OnSubscribe(topic string, qos network.Qos) {
+	f.ctrl.OnSubscribe(topic, qos, func(err error) {
+		f.ctrl.QueueUpdate(func() {
+			if err != nil {
+				//TODO handle error
+				return
+			}
+
+			f.filters.Add(model.NewSubscriptionFilter(topic, qos))
+			f.view.SetSubscriptionFilters(f.filters)
+		})
+	})
 }
 
-func (f *Filters) Subscribe(topic string, qos network.Qos) error {
-	if err := f.ctrl.Subscribe(topic, qos); err != nil {
-		return err
-	}
-	f.filters.Add(model.NewSubscriptionFilter(topic, qos))
-	f.view.SetSubscriptionFilters(f.filters)
+func (f *Filters) OnUnsubscribe(topic string) {
+	f.ctrl.OnUnsubscribe(topic, func(err error) {
+		f.ctrl.QueueUpdate(func() {
+			if err != nil {
+				//TODO handle error
+				return
+			}
 
-	return nil
-}
-
-func (f *Filters) Unsubscribe(topic string) error {
-	if err := f.ctrl.Unsubscribe(topic); err != nil {
-		return err
-	}
-	f.filters.Remove(topic)
-	f.view.SetSubscriptionFilters(f.filters)
-
-	return nil
+			f.filters.Remove(topic)
+			f.view.SetSubscriptionFilters(f.filters)
+		})
+	})
 }
 
 func (f *Filters) Cancel() {

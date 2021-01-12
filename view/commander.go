@@ -31,7 +31,7 @@ type (
 	}
 )
 
-func NewMainPage(ctrl CommanderController) *Commander {
+func NewCommander(ctrl CommanderController) *Commander {
 	c := &Commander{
 		Flex:    tview.NewFlex(),
 		topics:  tview.NewList(),

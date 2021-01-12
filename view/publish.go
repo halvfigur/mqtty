@@ -14,7 +14,8 @@ type (
 		OnLaunchEditor()
 		OnOpenFile()
 		OnOpenHistory()
-		OnPublish(topic string, qos network.Qos, retained bool, message []byte) error
+		OnPublish(topic string, qos network.Qos, retained bool, message []byte)
+		QueueUpdate(func())
 		Cancel()
 	}
 
@@ -84,10 +85,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 
 			retained := retainedCheckbox.IsChecked()
 
-			if err := ctrl.OnPublish(topic, qos, retained, p.data); err != nil {
-				// TODO handle error
-			}
-
+			ctrl.OnPublish(topic, qos, retained, p.data)
 			fc.Reset()
 		})
 

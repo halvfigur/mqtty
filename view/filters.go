@@ -1,8 +1,6 @@
 package view
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
 	"github.com/halvfigur/mqtty/network"
@@ -13,8 +11,8 @@ const filterMaxWidth = 32
 
 type (
 	FiltersController interface {
-		Subscribe(topic string, qos network.Qos) error
-		Unsubscribe(topic string) error
+		OnSubscribe(topic string, qos network.Qos)
+		OnUnsubscribe(topic string)
 		OnChangeFocus(p tview.Primitive)
 		Cancel()
 	}
@@ -70,9 +68,8 @@ func NewFilters(ctrl FiltersController) *Filters {
 		}
 
 		errorMsgView.Clear()
-		if err := ctrl.Subscribe(filterInput.GetText(), qos); err != nil {
-			errorMsgView.SetText(fmt.Sprint("[red]Failed to subscribe:[-] ", err.Error()))
-		}
+		ctrl.OnSubscribe(filterInput.GetText(), qos)
+		//errorMsgView.SetText(fmt.Sprint("[red]Failed to subscribe:[-] ", err.Error()))
 	}
 
 	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
@@ -101,9 +98,8 @@ func NewFilters(ctrl FiltersController) *Filters {
 		case tcell.KeyDelete:
 			i := filterList.GetCurrentItem()
 			name, _ := filterList.GetItemText(i)
-			if err := ctrl.Unsubscribe(name); err != nil {
-				errorMsgView.SetText(fmt.Sprint("[red]Unsubscribe failed:[-], ", err.Error()))
-			}
+			ctrl.OnUnsubscribe(name)
+			//errorMsgView.SetText(fmt.Sprint("[red]Unsubscribe failed:[-], ", err.Error()))
 		}
 
 		return event

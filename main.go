@@ -7,12 +7,5 @@ import (
 
 func main() {
 	c := network.NewMqttClient()
-	//c.connect("tcp://test.mosquitto.org", 1883)
-	//defer c.close()
-
-	//c.subscribe("hamweather/#", QosAtLeastOnce)
-	//c.subscribe("#", QosAtLeastOnce)
-
-	ui := control.NewMqttApp(c)
-	ui.Start()
+	control.NewMqttApp(c).Start()
 }

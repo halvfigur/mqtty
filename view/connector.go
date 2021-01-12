@@ -10,7 +10,9 @@ import (
 
 type (
 	ConnectorController interface {
-		OnConnect(host string, port int, username, password string) error
+		QueueUpdate(func())
+		OnConnect(host string, port int, username, password string, onCompletion func(error))
+		OnConnected()
 		Stop()
 	}
 
@@ -90,9 +92,16 @@ func NewConnector(ctrl ConnectorController) *Connector {
 		}
 
 		errorMsgView.Clear()
-		if err := ctrl.OnConnect(host, port, username, password); err != nil {
-			errorMsgView.SetText(fmt.Sprint("[red]Failed to connect:[-] ", err.Error()))
-		}
+		ctrl.OnConnect(host, port, username, password, func(err error) {
+			ctrl.QueueUpdate(func() {
+				if err != nil {
+					errorMsgView.SetText(fmt.Sprint("[red]Failed to connect:[-] ", err.Error()))
+					return
+				}
+
+				ctrl.OnConnected()
+			})
+		})
 	})
 
 	form.AddButton("Quit", func() {

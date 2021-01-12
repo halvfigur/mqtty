@@ -7,8 +7,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-const publishHistoryLabel = "publishhistory"
-
 type PublishHistory struct {
 	ctrl      Control
 	view      *view.PublishHistory

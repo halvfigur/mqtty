@@ -2,8 +2,6 @@ package control
 
 import "github.com/halvfigur/mqtty/view"
 
-const connectorLabel = "connector"
-
 type (
 	ConnectFunc func(host string, port int, username, password string)
 	Connector   struct {
@@ -23,18 +21,16 @@ func NewConnector(ctrl Control) *Connector {
 	return c
 }
 
-func (c *Connector) GetView() *view.Connector {
-	return c.view
+func (c *Connector) OnConnect(host string, port int, username, password string, onCompletion func(error)) {
+	c.ctrl.OnConnect(host, port, username, password, onCompletion)
 }
 
-func (c *Connector) OnConnect(host string, port int, username, password string) error {
-	if err := c.ctrl.Connect(host, port, username, password); err != nil {
-		// TODO display error message
-		return err
-	}
+func (c *Connector) OnConnected() {
+	c.ctrl.Cancel()
+}
 
-	c.ctrl.Hide(connectorLabel)
-	return nil
+func (c *Connector) QueueUpdate(f func()) {
+	c.ctrl.QueueUpdate(f)
 }
 
 func (c *Connector) Stop() {

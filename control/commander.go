@@ -8,8 +8,6 @@ import (
 	"github.com/halvfigur/mqtty/view"
 )
 
-const commanderLabel = "commander"
-
 type CommanderController struct {
 	ctrl        Control
 	mainView    *view.Commander
@@ -19,13 +17,13 @@ type CommanderController struct {
 	documents   *model.DocumentStore
 }
 
-func NewMainPageController(ctrl Control) *CommanderController {
+func NewCommanderController(ctrl Control) *CommanderController {
 	c := &CommanderController{
 		ctrl:      ctrl,
 		documents: model.NewDocumentStore(),
 	}
 
-	c.mainView = view.NewMainPage(c)
+	c.mainView = view.NewCommander(c)
 	c.mainView.SetDocumentStore(c.documents)
 
 	c.connectCtrl = NewConnector(ctrl)
@@ -62,11 +60,11 @@ func (c *CommanderController) OnPrevDocument() {
 }
 
 func (c *CommanderController) OnSubscribe() {
-	c.ctrl.OnSubscribe()
+	c.ctrl.OnDisplaySubscriber()
 }
 
 func (c *CommanderController) OnPublish() {
-	c.ctrl.OnPublish()
+	c.ctrl.OnDisplayPublisher()
 }
 
 func (c *CommanderController) OnSetScrollToTop(enabled bool) {
@@ -78,7 +76,7 @@ func (c *CommanderController) OnSetFollow(enabled bool) {
 }
 
 func (c *CommanderController) OnConnect() {
-	c.ctrl.OnConnect()
+	c.ctrl.OnDisplayConnector()
 }
 
 func (c *CommanderController) Cancel() {

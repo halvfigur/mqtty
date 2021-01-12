@@ -11,11 +11,6 @@ import (
 	"github.com/halvfigur/mqtty/view"
 )
 
-const (
-	publishPageLabel  = "publishpage"
-	openFileViewLabel = "openfileview"
-)
-
 type Publish struct {
 	ctrl        Control
 	view        *view.Publish
@@ -41,14 +36,10 @@ func NewPublish(ctrl Control) *Publish {
 
 	c.historyCtrl = NewPublishHistory(ctrl)
 
-	c.ctrl.Register(publishPageLabel, c.view, false)
-	c.ctrl.Register(openFileViewLabel, view.Center(c.fileView, 1, 1), false)
+	c.ctrl.Register(publishLabel, c.view, false)
+	c.ctrl.Register(openFileLabel, view.Center(c.fileView, 1, 1), false)
 
 	return c
-}
-
-func (c *Publish) GetView(p tview.Primitive) *view.Publish {
-	return c.view
 }
 
 func (c *Publish) OnChangeFocus(p tview.Primitive) {
@@ -71,17 +62,17 @@ func (c *Publish) OnLaunchEditor() {
 }
 
 func (c *Publish) OnOpenFile() {
-	c.ctrl.Display(openFileViewLabel)
+	c.ctrl.OnDisplayOpenFile()
 }
 
 func (c *Publish) OnFileSelected(filename string) {
 	c.readAndUpdateView(filename)
-	c.ctrl.Hide(openFileViewLabel)
-	c.ctrl.Display(publishPageLabel)
+	c.ctrl.Cancel()
+	c.ctrl.OnDisplayPublisher()
 }
 
 func (c *Publish) OnOpenHistory() {
-	c.ctrl.Display(publishHistoryLabel)
+	c.ctrl.OnDisplayPublishHistory()
 }
 
 func (c *Publish) OnError(err error) {
@@ -96,16 +87,22 @@ func (c *Publish) readAndUpdateView(filename string) {
 	c.view.SetData(data)
 }
 
-func (c *Publish) OnPublish(topic string, qos network.Qos, retained bool, message []byte) error {
-	if err := c.ctrl.Publish(topic, qos, retained, message); err != nil {
-		return err
-	}
+func (c *Publish) OnPublish(topic string, qos network.Qos, retained bool, message []byte) {
+	c.ctrl.OnPublish(topic, qos, retained, message, func(err error) {
+		c.ctrl.QueueUpdate(func() {
+			if err != nil {
+				//TODO handle error
+				return
+			}
+			c.historyCtrl.AddDocument(topic, data.NewDocumentBytes(message))
+		})
+	})
+}
 
-	c.historyCtrl.AddDocument(topic, data.NewDocumentBytes(message))
-
-	return nil
+func (c *Publish) QueueUpdate(f func()) {
+	c.ctrl.QueueUpdate(f)
 }
 
 func (c *Publish) Cancel() {
-	c.ctrl.Hide(publishPageLabel)
+	c.ctrl.Hide(publishLabel)
 }

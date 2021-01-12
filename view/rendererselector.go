@@ -6,11 +6,6 @@ import (
 )
 
 type (
-	RendererSelectionController interface {
-		OnRendererSelected(renderer model.Renderer)
-		GetView() *RendererSelector
-	}
-
 	RendererSelector struct {
 		*widget.RadioButtons
 

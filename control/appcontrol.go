@@ -14,25 +14,40 @@ import (
 	"github.com/halvfigur/mqtty/network"
 )
 
+const (
+	commanderLabel      = "commander"
+	connectorLabel      = "connector"
+	filtersLabel        = "filters"
+	publishLabel        = "publishpage"
+	publishHistoryLabel = "publishhistory"
+	openFileLabel       = "openfileview"
+)
+
 type (
 	AppController interface {
-		OnConnect()
-		OnSubscribe()
-		OnPublish()
 		OnLaunchEditor() (string, error)
+		QueueUpdate(func())
+		QueueUpdateDraw(func())
 		Stop()
 	}
 
 	MqttController interface {
-		Connect(host string, port int, username, password string) error
-		Subscribe(topic string, qos network.Qos) error
-		Unsubscribe(topic string) error
-		Publish(topic string, qos network.Qos, retained bool, message []byte) error
+		OnConnect(host string, port int, username, password string, onCompletion func(error))
+		OnSubscribe(topic string, qos network.Qos, onCompletion func(error))
+		OnUnsubscribe(topic string, onCompletion func(error))
+		OnPublish(topic string, qos network.Qos, retained bool, message []byte, onCompletion func(error))
 	}
 
 	ViewController interface {
+		OnDisplayConnector()
+		OnDisplayCommander()
+		OnDisplaySubscriber()
+		OnDisplayPublisher()
+		OnDisplayPublishHistory()
+		OnDisplayOpenFile()
+
 		Register(pageLabel string, p tview.Primitive, visible bool)
-		Display(pageLabel string)
+		//Display(pageLabel string)
 		Hide(pageLabel string)
 		Focus(p tview.Primitive)
 		Cancel()
@@ -62,50 +77,58 @@ func NewMqttApp(c *network.MqttClient) *MqttApp {
 		pages: tview.NewPages(),
 	}
 
-	u.main = NewMainPageController(u)
+	u.main = NewCommanderController(u)
 
 	return u
 }
 
-func (a *MqttApp) Connect(host string, port int, username, password string) error {
-	if err := a.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password); err != nil {
-		return err
-	}
-	a.Display(commanderLabel)
-	return nil
+func (a *MqttApp) OnConnect(host string, port int, username, password string, onCompletion func(error)) {
+	a.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password, onCompletion)
 }
 
-func (a *MqttApp) Subscribe(filter string, qos network.Qos) error {
-	return a.c.Subscribe(filter, qos)
+func (a *MqttApp) OnSubscribe(filter string, qos network.Qos, onCompletion func(error)) {
+	a.c.Subscribe(filter, qos, onCompletion)
 }
 
-func (a *MqttApp) Unsubscribe(filter string) error {
-	return a.c.Unsubscribe(filter)
+func (a *MqttApp) OnUnsubscribe(filter string, onCompletion func(error)) {
+	a.c.Unsubscribe(filter, onCompletion)
 }
 
-func (a *MqttApp) Publish(topic string, qos network.Qos, retained bool, message []byte) error {
-	return a.c.Publish(topic, qos, retained, message)
+func (a *MqttApp) OnPublish(topic string, qos network.Qos, retained bool, message []byte, onCompletion func(error)) {
+	a.c.Publish(topic, qos, retained, message, onCompletion)
 }
 
 func (a *MqttApp) Register(pageLabel string, p tview.Primitive, visible bool) {
 	a.pages.AddPage(pageLabel, p, true, visible)
 }
 
-func (a *MqttApp) Display(pageLabel string) {
+func (a *MqttApp) display(pageLabel string) {
 	a.pages.SendToFront(pageLabel)
 	a.pages.ShowPage(pageLabel)
 }
 
-func (a *MqttApp) OnConnect() {
-	a.Display(connectorLabel)
+func (a *MqttApp) OnDisplayConnector() {
+	a.display(connectorLabel)
 }
 
-func (a *MqttApp) OnSubscribe() {
-	a.Display(filtersLabel)
+func (a *MqttApp) OnDisplayCommander() {
+	a.display(commanderLabel)
 }
 
-func (a *MqttApp) OnPublish() {
-	a.Display(publishPageLabel)
+func (a *MqttApp) OnDisplaySubscriber() {
+	a.display(filtersLabel)
+}
+
+func (a *MqttApp) OnDisplayPublisher() {
+	a.display(publishLabel)
+}
+
+func (a *MqttApp) OnDisplayPublishHistory() {
+	a.display(publishHistoryLabel)
+}
+
+func (a *MqttApp) OnDisplayOpenFile() {
+	a.display(openFileLabel)
 }
 
 func (a *MqttApp) Hide(pageLabel string) {
@@ -147,18 +170,32 @@ func (a *MqttApp) Stop() {
 }
 
 func (a *MqttApp) Cancel() {
+	/*
+		name, _ := a.pages.GetFrontPage()
+		a.pages.HidePage(name)
+	*/
 	name, _ := a.pages.GetFrontPage()
 	a.pages.HidePage(name)
+	a.pages.SendToBack(name)
+}
+
+func (a *MqttApp) QueueUpdate(f func()) {
+	a.app.QueueUpdate(f)
+}
+
+func (a *MqttApp) QueueUpdateDraw(f func()) {
+	a.app.QueueUpdateDraw(f)
 }
 
 func (a *MqttApp) Start() {
-	a.Display(connectorLabel)
+	a.OnDisplayCommander()
+	a.OnDisplayConnector()
 
 	a.app.SetRoot(a.pages, true)
 
 	go func() {
 		/* This goroutine will exit when the incomming channel is closed */
-		for m := range a.c.Incomming() {
+		for m := range a.c.Incoming() {
 			a.app.QueueUpdateDraw(func() {
 				doc := data.NewDocumentBytes(m.Payload())
 				a.main.AddDocument(m.Topic(), doc)
