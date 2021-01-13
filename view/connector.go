@@ -44,10 +44,12 @@ func NewConnector(ctrl ConnectorController) *Connector {
 	passwordField := tview.NewInputField().
 		SetLabel("Password: ").
 		SetMaskCharacter('*')
+	connectButton := tview.NewButton("Connect")
+	cancelButton := tview.NewButton("Cancel")
 
-	fc := NewFocusChain(hostField, portField, usernameField, passwordField)
+	fc := NewFocusChain(hostField, portField, usernameField, passwordField, connectButton, cancelButton)
 
-	connect := func() {
+	connectButton.SetSelectedFunc(func() {
 		host := hostField.GetText()
 		if host == "" {
 			ctrl.OnChangeFocus(fc.SetFocus(0))
@@ -70,17 +72,8 @@ func NewConnector(ctrl ConnectorController) *Connector {
 
 		ctrl.OnConnect(host, port, username, password)
 		fc.Reset()
-	}
-
-	connectButton := tview.NewButton("Connect").
-		SetSelectedFunc(connect)
-
-	cancelButton := tview.NewButton("Cancel").
-		SetSelectedFunc(func() {
-			ctrl.Cancel()
-		})
-
-	fc.Add(connectButton, cancelButton)
+	})
+	cancelButton.SetSelectedFunc(ctrl.Cancel)
 
 	buttonFlex := Space(tview.FlexColumn, connectButton, cancelButton)
 	flex := tview.NewFlex().
@@ -100,14 +93,12 @@ func NewConnector(ctrl ConnectorController) *Connector {
 				ctrl.OnChangeFocus(fc.Next())
 			case tcell.KeyBacktab:
 				ctrl.OnChangeFocus(fc.Prev())
-			case tcell.KeyEnter:
-				connect()
 			}
 
 			return event
 		})
 
 	return &Connector{
-		Flex: Center(flex, 100, 100),
+		Flex: Center(flex, 50, 50),
 	}
 }
