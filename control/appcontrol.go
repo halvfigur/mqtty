@@ -86,6 +86,12 @@ func NewMqttApp(c *network.MqttClient) *MqttApp {
 
 	u.main = NewCommanderController(u)
 
+	u.c.SetConnectionStatusFunc(func(s network.ConnectionStatus) {
+		u.app.QueueUpdateDraw(func() {
+			u.main.SetConnectionStatus(s)
+		})
+	})
+
 	return u
 }
 
@@ -119,8 +125,7 @@ func (a *MqttApp) OnDisplayConnector() {
 }
 
 func (a *MqttApp) OnDisplayCommander() {
-	//a.display(commanderLabel)
-	a.pages.SwitchToPage(commanderLabel)
+	a.display(commanderLabel)
 }
 
 func (a *MqttApp) OnDisplaySubscriber() {

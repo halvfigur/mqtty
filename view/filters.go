@@ -42,11 +42,6 @@ func NewFilters(ctrl FiltersController) *Filters {
 
 	fc := NewFocusChain(filterInput, qosDropDown)
 
-	errorMsgView := tview.NewTextView().
-		SetWrap(true).
-		SetWordWrap(true).
-		SetDynamicColors(true)
-
 	subscribe := func() {
 		defer ctrl.OnChangeFocus(fc.Reset())
 
@@ -68,9 +63,7 @@ func NewFilters(ctrl FiltersController) *Filters {
 			qos = network.QosExatlyOnce
 		}
 
-		errorMsgView.Clear()
 		ctrl.OnSubscribe(filterInput.GetText(), qos)
-		//errorMsgView.SetText(fmt.Sprint("[red]Failed to subscribe:[-] ", err.Error()))
 	}
 
 	filterFlex := tview.NewFlex().
@@ -85,7 +78,6 @@ func NewFilters(ctrl FiltersController) *Filters {
 			i := filterList.GetCurrentItem()
 			name, _ := filterList.GetItemText(i)
 			ctrl.OnUnsubscribe(name)
-			//errorMsgView.SetText(fmt.Sprint("[red]Unsubscribe failed:[-], ", err.Error()))
 		}
 
 		return event

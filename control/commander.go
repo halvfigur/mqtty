@@ -5,6 +5,7 @@ import (
 
 	"github.com/halvfigur/mqtty/data"
 	"github.com/halvfigur/mqtty/model"
+	"github.com/halvfigur/mqtty/network"
 	"github.com/halvfigur/mqtty/view"
 )
 
@@ -25,6 +26,7 @@ func NewCommanderController(ctrl Control) *CommanderController {
 
 	c.mainView = view.NewCommander(c)
 	c.mainView.SetDocumentStore(c.documents)
+	c.mainView.SetConnectionStatus(network.StatusDisconnected)
 
 	c.connectCtrl = NewConnector(ctrl)
 	c.filtersCtrl = NewFilters(ctrl)
@@ -39,6 +41,10 @@ func (c *CommanderController) AddDocument(t string, d *data.Document) {
 	c.documents.Store(t, d)
 	c.mainView.AddTopic(t)
 	c.mainView.Refresh()
+}
+
+func (c *CommanderController) SetConnectionStatus(s network.ConnectionStatus) {
+	c.mainView.SetConnectionStatus(s)
 }
 
 func (c *CommanderController) OnTopicSelected(t string) {

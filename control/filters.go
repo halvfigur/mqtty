@@ -28,7 +28,7 @@ func NewFilters(ctrl Control) *Filters {
 
 func (f *Filters) OnSubscribe(topic string, qos network.Qos) {
 	f.ctrl.OnSubscribe(topic, qos, func(err error) {
-		f.ctrl.QueueUpdate(func() {
+		f.ctrl.QueueUpdateDraw(func() {
 			if err != nil {
 				f.ctrl.OnDisplayError(err)
 				return
@@ -42,7 +42,7 @@ func (f *Filters) OnSubscribe(topic string, qos network.Qos) {
 
 func (f *Filters) OnUnsubscribe(topic string) {
 	f.ctrl.OnUnsubscribe(topic, func(err error) {
-		f.ctrl.QueueUpdate(func() {
+		f.ctrl.QueueUpdateDraw(func() {
 			if err != nil {
 				f.ctrl.OnDisplayError(err)
 				return

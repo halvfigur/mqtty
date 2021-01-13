@@ -8,16 +8,29 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-type Qos byte
+type (
+	ConnectionStatus int
+	Qos              byte
+)
+
+const (
+	StatusConnected = iota
+	StatusDisconnected
+	StatusReconnecting
+)
 
 const (
 	QosAtMostOnce Qos = iota
 	QosAtLeastOnce
 	QosExatlyOnce
+)
 
+const (
 	incomingChanCap = 1024
 	requestsChanCap = 32
+)
 
+const (
 	connectTimeout     = 5 * time.Second
 	publishTimeout     = 5 * time.Second
 	subscribeTimeout   = 5 * time.Second
@@ -69,6 +82,8 @@ type (
 		incoming chan *Message
 		requests chan interface{}
 		done     chan struct{}
+
+		onConnectionStatus func(ConnectionStatus)
 	}
 )
 
@@ -102,6 +117,10 @@ func NewMqttClient() *MqttClient {
 	go c.processRequests()
 
 	return c
+}
+
+func (c *MqttClient) SetConnectionStatusFunc(f func(ConnectionStatus)) {
+	c.onConnectionStatus = f
 }
 
 func (c *MqttClient) processRequests() {
@@ -150,6 +169,7 @@ func (c *MqttClient) handleConnectRequest(r *connectRequest) {
 	opts.SetDefaultPublishHandler(c.onMessageArrived)
 	opts.OnConnect = c.onConnect
 	opts.OnConnectionLost = c.onConnectionLost
+	opts.OnReconnecting = c.onReconnecting
 	c.c = mqtt.NewClient(opts)
 
 	t := c.c.Connect()
@@ -256,9 +276,21 @@ func (c *MqttClient) Publish(topic string, qos Qos, retained bool, message []byt
 }
 
 func (c *MqttClient) onConnect(client mqtt.Client) {
+	if c.onConnectionStatus != nil {
+		c.onConnectionStatus(StatusConnected)
+	}
 }
 
 func (c *MqttClient) onConnectionLost(client mqtt.Client, err error) {
+	if c.onConnectionStatus != nil {
+		c.onConnectionStatus(StatusDisconnected)
+	}
+}
+
+func (c *MqttClient) onReconnecting(client mqtt.Client, opts *mqtt.ClientOptions) {
+	if c.onConnectionStatus != nil {
+		c.onConnectionStatus(StatusReconnecting)
+	}
 }
 
 func (c *MqttClient) onMessageArrived(client mqtt.Client, msg mqtt.Message) {

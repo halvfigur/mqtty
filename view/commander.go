@@ -5,6 +5,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/halvfigur/mqtty/model"
+	"github.com/halvfigur/mqtty/network"
+	"github.com/halvfigur/mqtty/widget"
 	"github.com/rivo/tview"
 )
 
@@ -24,8 +26,10 @@ type (
 		*tview.Flex
 		ctrl CommanderController
 
-		topics            *tview.List
-		docView           *Document
+		topicsList     *tview.List
+		documentView   *Document
+		connectionView *tview.TextView
+
 		documents         *model.DocumentStore
 		scrollToBeginning bool
 	}
@@ -33,20 +37,23 @@ type (
 
 func NewCommander(ctrl CommanderController) *Commander {
 	c := &Commander{
-		Flex:    tview.NewFlex(),
-		topics:  tview.NewList(),
-		docView: NewDocumentView(),
-		ctrl:    ctrl,
+		Flex:         tview.NewFlex(),
+		ctrl:         ctrl,
+		topicsList:   tview.NewList(),
+		documentView: NewDocumentView(),
 	}
 
-	c.docView.SetBorder(true)
-	/* Topics list */
-	c.topics.SetBorder(true).SetTitle("Topics")
-	c.topics.ShowSecondaryText(false)
-	c.topics.SetChangedFunc(func(index int, mainText, secondaryText string, short rune) {
+	/* Document columns */
+	c.documentView.SetBorder(true)
+
+	/* Topics column */
+	c.topicsList.SetBorder(true).SetTitle("Topics")
+	c.topicsList.ShowSecondaryText(false)
+	c.topicsList.SetChangedFunc(func(index int, mainText, secondaryText string, short rune) {
 		c.ctrl.OnTopicSelected(mainText)
 	})
 
+	/* Controls column */
 	scrollToTopCheckbox := tview.NewCheckbox().
 		SetLabel("Scroll to top: ").
 		SetChangedFunc(func(checked bool) { c.scrollToBeginning = checked })
@@ -62,21 +69,30 @@ func NewCommander(ctrl CommanderController) *Commander {
 			model.NewJsonRenderer(),
 		}).
 		SetSelectedFunc(func(renderer model.Renderer) {
-			c.docView.SetRenderer(renderer)
+			c.documentView.SetRenderer(renderer)
 			c.Refresh()
 		})
-	controlsFlex := tview.NewFlex().SetDirection(tview.FlexRow)
-	controlsFlex.SetBorder(true).SetTitle("Controls")
-	controlsFlex.AddItem(renderersView, 0, 1, false).
+
+	c.connectionView = tview.NewTextView().
+		SetDynamicColors(true)
+
+	controlsFlex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(renderersView, 0, 1, false).
 		AddItem(scrollToTopCheckbox, 1, 0, false).
-		AddItem(followCheckbox, 1, 0, false)
+		AddItem(followCheckbox, 1, 0, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
+		AddItem(c.connectionView, 1, 0, false)
+
+	controlsFlex.SetBorder(true).SetTitle("Controls")
 
 	columnsFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
-		AddItem(c.topics, 0, 1, true).
-		AddItem(c.docView, 0, 3, false).
+		AddItem(c.topicsList, 0, 1, true).
+		AddItem(c.documentView, 0, 3, false).
 		AddItem(controlsFlex, 0, 1, false)
-	fc := NewFocusChain(c.topics, c.docView, renderersView, scrollToTopCheckbox, followCheckbox)
+
+	fc := NewFocusChain(c.topicsList, c.documentView, renderersView, scrollToTopCheckbox, followCheckbox)
 
 	columnsFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -104,7 +120,7 @@ func NewCommander(ctrl CommanderController) *Commander {
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] navigate  [blue]^O[-] open connection  [blue](^F):[-] filters  [blue](^P):[-] publish  [blue]^C:[-] terminate"),
+			SetText("[blue](TAB):[-] Navigate  [blue](^O):[-] Open connection  [blue](^F):[-] Filters  [blue](^P):[-] Publish  [blue](^C):[-] Terminate"),
 			1, 0, false)
 
 	return c
@@ -112,6 +128,17 @@ func NewCommander(ctrl CommanderController) *Commander {
 
 func (c *Commander) SetDocumentStore(documents *model.DocumentStore) {
 	c.documents = documents
+}
+
+func (c *Commander) SetConnectionStatus(s network.ConnectionStatus) {
+	switch s {
+	case network.StatusConnected:
+		c.connectionView.SetText("[green]CONNECTED[-]")
+	case network.StatusDisconnected:
+		c.connectionView.SetText("[red]DISCONNECTED[-]")
+	case network.StatusReconnecting:
+		c.connectionView.SetText("[yellow]RECONNECTING[-]")
+	}
 }
 
 func (c *Commander) Focus(delegate func(p tview.Primitive)) {
@@ -126,7 +153,7 @@ func (c *Commander) AddTopic(t string) {
 		ignoreCase      = false
 	)
 
-	if c.topics.FindItems(t, subStringMatch, mustContainBoth, ignoreCase) != nil {
+	if c.topicsList.FindItems(t, subStringMatch, mustContainBoth, ignoreCase) != nil {
 		return
 	}
 
@@ -135,21 +162,21 @@ func (c *Commander) AddTopic(t string) {
 		shortCut      = 0
 	)
 
-	c.topics.AddItem(t, secondaryText, shortCut, nil)
+	c.topicsList.AddItem(t, secondaryText, shortCut, nil)
 }
 
 func (c *Commander) setDocumentTitle(title string) {
-	c.docView.SetTitle(title)
+	c.documentView.SetTitle(title)
 }
 
 func (c *Commander) setTopicsTitle(title string) {
-	c.topics.SetTitle(title)
+	c.topicsList.SetTitle(title)
 }
 
 func (c *Commander) Refresh() {
 	t, index := c.documents.Current()
 	//c.setTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
-	c.setTopicsTitle(fmt.Sprintf("Topic %d/%d", c.topics.GetCurrentItem()+1, c.topics.GetItemCount()))
+	c.setTopicsTitle(fmt.Sprintf("Topic %d/%d", c.topicsList.GetCurrentItem()+1, c.topicsList.GetItemCount()))
 	if index == nil {
 		c.setDocumentTitle("Document (none)")
 		return
@@ -158,10 +185,10 @@ func (c *Commander) Refresh() {
 	i, d := index.Current()
 	c.setDocumentTitle(fmt.Sprintf("%s (%d/%d)", t, i+1, index.Len()))
 
-	c.docView.SetDocument(d)
-	c.docView.Refresh()
+	c.documentView.SetDocument(d)
+	c.documentView.Refresh()
 	if c.scrollToBeginning {
-		c.docView.ScrollToBeginning()
+		c.documentView.ScrollToBeginning()
 	}
 
 }
