@@ -15,7 +15,6 @@ type (
 		OnOpenFile()
 		OnOpenHistory()
 		OnPublish(topic string, qos network.Qos, retained bool, message []byte)
-		QueueUpdate(func())
 		Cancel()
 	}
 
@@ -29,21 +28,17 @@ type (
 )
 
 func NewPublish(ctrl PublishControl) *Publish {
-	const (
-		topicLabel    = "Topic"
-		qosLabel      = "Qos"
-		retainedLabel = "Retained"
-		topicWidth    = 32
-	)
+	const topicWidth = 32
+
 	p := &Publish{
 		ctrl:     ctrl,
 		renderer: model.NewRawRenderer(),
 	}
 
 	topicField := tview.NewInputField().
-		SetLabel("Topic: ")
+		SetLabel("Topic:    ")
 	qosDropDown := tview.NewDropDown().
-		SetLabel("Qos: ").
+		SetLabel("Qos:      ").
 		SetOptions([]string{"At least once", "At most once", "Exactly once"}, nil)
 	retainedCheckbox := tview.NewCheckbox().
 		SetLabel("Retained: ")
@@ -88,22 +83,11 @@ func NewPublish(ctrl PublishControl) *Publish {
 		fc.Reset()
 	}
 
-	publishButton := tview.NewButton("Publish").
-		SetSelectedFunc(publish)
+	publishButton := Space(tview.FlexColumn, tview.NewButton("Publish").
+		SetSelectedFunc(publish))
 
 	fc.Add(publishButton)
 
-	/*
-		buttonFlex := tview.NewFlex().
-			SetDirection(tview.FlexColumn).
-			AddItem(nil, 0, 1, false).
-			AddItem(launchEditorButton, 0, 1, false).
-			AddItem(nil, 0, 1, false).
-			AddItem(openFileButton, 0, 1, false).
-			AddItem(nil, 0, 1, false).
-			AddItem(openHistoryButton, 0, 1, false).
-			AddItem(nil, 0, 1, false)
-	*/
 	buttonFlex := Space(tview.FlexColumn, launchEditorButton, openFileButton, openHistoryButton)
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
@@ -111,10 +95,12 @@ func NewPublish(ctrl PublishControl) *Publish {
 	flex.AddItem(topicField, 1, 0, true).
 		AddItem(qosDropDown, 1, 0, false).
 		AddItem(retainedCheckbox, 1, 0, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(buttonFlex, 1, 0, false).
 		AddItem(widget.NewDivider().SetLabel("Data"), 1, 0, false).
 		AddItem(p.dataView, 0, 1, false).
 		AddItem(publishButton, 1, 1, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
 			SetText("[blue](TAB):[-] navigate  [blue](^E):[-] launch editor  [blue](^F):[-] open file  [blue](^H):[-] open history  [blue](^P):[-] publish"),

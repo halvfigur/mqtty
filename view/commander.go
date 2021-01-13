@@ -88,6 +88,8 @@ func NewCommander(ctrl CommanderController) *Commander {
 			c.ctrl.OnNextDocument()
 		case tcell.KeyLeft:
 			c.ctrl.OnPrevDocument()
+		case tcell.KeyCtrlO:
+			c.ctrl.OnConnect()
 		case tcell.KeyCtrlF:
 			c.ctrl.OnSubscribe()
 		case tcell.KeyCtrlP:
@@ -102,7 +104,7 @@ func NewCommander(ctrl CommanderController) *Commander {
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] navigate  [blue](^F):[-] filters  [blue](^P):[-] publish"),
+			SetText("[blue](TAB):[-] navigate  [blue]^O[-] open connection  [blue](^F):[-] filters  [blue](^P):[-] publish  [blue]^C:[-] terminate"),
 			1, 0, false)
 
 	return c

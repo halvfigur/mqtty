@@ -12,15 +12,17 @@ import (
 
 	"github.com/halvfigur/mqtty/data"
 	"github.com/halvfigur/mqtty/network"
+	"github.com/halvfigur/mqtty/view"
 )
 
 const (
 	commanderLabel      = "commander"
 	connectorLabel      = "connector"
 	filtersLabel        = "filters"
-	publishLabel        = "publishpage"
+	publishLabel        = "publish"
 	publishHistoryLabel = "publishhistory"
-	openFileLabel       = "openfileview"
+	openFileLabel       = "openfile"
+	errorLabel          = "error"
 )
 
 type (
@@ -45,9 +47,9 @@ type (
 		OnDisplayPublisher()
 		OnDisplayPublishHistory()
 		OnDisplayOpenFile()
+		OnDisplayError(err error)
 
 		Register(pageLabel string, p tview.Primitive, visible bool)
-		//Display(pageLabel string)
 		Hide(pageLabel string)
 		Focus(p tview.Primitive)
 		Cancel()
@@ -60,10 +62,11 @@ type (
 	}
 
 	MqttApp struct {
-		c     *network.MqttClient
-		app   *tview.Application
-		pages *tview.Pages
-		main  *CommanderController
+		c          *network.MqttClient
+		app        *tview.Application
+		pages      *tview.Pages
+		errorModal *tview.Modal
+		main       *CommanderController
 	}
 )
 
@@ -76,6 +79,10 @@ func NewMqttApp(c *network.MqttClient) *MqttApp {
 		app:   app,
 		pages: tview.NewPages(),
 	}
+
+	u.errorModal = view.NewErrorModal(u)
+
+	u.Register(errorLabel, u.errorModal, false)
 
 	u.main = NewCommanderController(u)
 
@@ -112,7 +119,8 @@ func (a *MqttApp) OnDisplayConnector() {
 }
 
 func (a *MqttApp) OnDisplayCommander() {
-	a.display(commanderLabel)
+	//a.display(commanderLabel)
+	a.pages.SwitchToPage(commanderLabel)
 }
 
 func (a *MqttApp) OnDisplaySubscriber() {
@@ -129,6 +137,11 @@ func (a *MqttApp) OnDisplayPublishHistory() {
 
 func (a *MqttApp) OnDisplayOpenFile() {
 	a.display(openFileLabel)
+}
+
+func (a *MqttApp) OnDisplayError(err error) {
+	a.errorModal.SetText(err.Error())
+	a.display(errorLabel)
 }
 
 func (a *MqttApp) Hide(pageLabel string) {
@@ -188,8 +201,8 @@ func (a *MqttApp) QueueUpdateDraw(f func()) {
 }
 
 func (a *MqttApp) Start() {
+
 	a.OnDisplayCommander()
-	a.OnDisplayConnector()
 
 	a.app.SetRoot(a.pages, true)
 

@@ -78,7 +78,3 @@ func (c *CommanderController) OnSetFollow(enabled bool) {
 func (c *CommanderController) OnConnect() {
 	c.ctrl.OnDisplayConnector()
 }
-
-func (c *CommanderController) Cancel() {
-	c.ctrl.Hide(filtersLabel)
-}

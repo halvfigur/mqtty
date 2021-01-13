@@ -27,7 +27,7 @@ type (
 
 func NewFilters(ctrl FiltersController) *Filters {
 	filterInput := tview.NewInputField().
-		SetLabel("[blue]Filter:[-] ").
+		SetLabel("Filter: ").
 		SetFieldWidth(filterMaxWidth).
 		SetText("hamweather/#")
 	filterInput.SetBorderPadding(1, 1, 1, 1)
@@ -35,7 +35,7 @@ func NewFilters(ctrl FiltersController) *Filters {
 	qosOpts := []string{"At most once", "At least once", "Exatly once"}
 	qosDropDown := tview.NewDropDown().
 		SetOptions(qosOpts, nil).
-		SetLabel("[blue]Qos:[-] ").
+		SetLabel("Qos: ").
 		SetFieldWidth(0).
 		SetCurrentOption(0)
 	qosDropDown.SetBorderPadding(1, 1, 1, 1)
@@ -73,24 +73,10 @@ func NewFilters(ctrl FiltersController) *Filters {
 		//errorMsgView.SetText(fmt.Sprint("[red]Failed to subscribe:[-] ", err.Error()))
 	}
 
-	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
-		subscribe()
-	})
-	addButton.SetBorder(true)
-
-	clearButton := tview.NewButton("Clear").SetSelectedFunc(func() {
-		filterInput.SetText("")
-		qosDropDown.SetCurrentOption(0)
-		ctrl.OnChangeFocus(fc.Reset())
-	})
-	clearButton.SetBorder(true)
-
 	filterFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(filterInput, 0, 5, true).
-		AddItem(qosDropDown, 0, 5, false).
-		AddItem(addButton, 0, 1, false).
-		AddItem(clearButton, 0, 1, false)
+		AddItem(qosDropDown, 0, 5, false)
 
 	filterList := tview.NewList()
 	filterList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -105,13 +91,27 @@ func NewFilters(ctrl FiltersController) *Filters {
 		return event
 	})
 
-	viewFlex := tview.NewFlex().SetDirection(tview.FlexRow)
-	viewFlex.SetTitle("Filters").SetBorder(true)
-	viewFlex.AddItem(filterFlex, 3, 0, true)
-	viewFlex.AddItem(widget.NewDivider().SetLabel("Applied"), 1, 0, false)
-	viewFlex.AddItem(filterList, 0, 1, false)
-	viewFlex.AddItem(errorMsgView, 1, 0, false)
+	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
+		subscribe()
+	})
 
+	clearButton := tview.NewButton("Clear").SetSelectedFunc(func() {
+		filterInput.SetText("")
+		qosDropDown.SetCurrentOption(0)
+		ctrl.OnChangeFocus(fc.Reset())
+	})
+
+	buttonFlex := Space(tview.FlexColumn, addButton, clearButton)
+
+	viewFlex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(filterFlex, 3, 0, true).
+		AddItem(widget.NewDivider().SetLabel("Applied"), 1, 0, false).
+		AddItem(filterList, 0, 1, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
+		AddItem(buttonFlex, 1, 0, false)
+
+	viewFlex.SetTitle("Filters").SetBorder(true)
 	fc.Add(addButton, clearButton, filterList)
 
 	viewFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {

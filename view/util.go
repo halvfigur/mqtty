@@ -30,6 +30,11 @@ func (c *FocusChain) Prev() tview.Primitive {
 	return c.items[c.index]
 }
 
+func (c *FocusChain) SetFocus(index int) tview.Primitive {
+	c.index = index
+	return c.items[c.index]
+}
+
 func (c *FocusChain) Reset() tview.Primitive {
 	c.index = 0
 	return c.items[c.index]

@@ -30,7 +30,7 @@ func (f *Filters) OnSubscribe(topic string, qos network.Qos) {
 	f.ctrl.OnSubscribe(topic, qos, func(err error) {
 		f.ctrl.QueueUpdate(func() {
 			if err != nil {
-				//TODO handle error
+				f.ctrl.OnDisplayError(err)
 				return
 			}
 
@@ -44,7 +44,7 @@ func (f *Filters) OnUnsubscribe(topic string) {
 	f.ctrl.OnUnsubscribe(topic, func(err error) {
 		f.ctrl.QueueUpdate(func() {
 			if err != nil {
-				//TODO handle error
+				f.ctrl.OnDisplayError(err)
 				return
 			}
 

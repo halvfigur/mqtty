@@ -1,118 +1,109 @@
 package view
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 
+	"github.com/gdamore/tcell/v2"
+	"github.com/halvfigur/mqtty/widget"
 	"github.com/rivo/tview"
 )
 
 type (
 	ConnectorController interface {
-		QueueUpdate(func())
-		OnConnect(host string, port int, username, password string, onCompletion func(error))
-		OnConnected()
-		Stop()
+		OnChangeFocus(p tview.Primitive)
+		OnConnect(host string, port int, username, password string)
+		Cancel()
 	}
 
 	Connector struct {
 		*tview.Flex
-		ctrl ConnectorController
 	}
 )
 
 func NewConnector(ctrl ConnectorController) *Connector {
 	const (
-		hostLabel     = "Host"
-		portLabel     = "Port"
-		usernameLabel = "Username"
-		passwordLabel = "Password"
-
 		textFieldWidth   = 32
 		numberFieldWidth = 5
 		defaultPort      = 1883
 	)
-	host := "test.mosquitto.org"
-	port := defaultPort
-	username := ""
-	password := ""
 
-	p := &Connector{
-		ctrl: ctrl,
+	validatePort := func(text string) bool {
+		return regexp.MustCompile(`^[1-9]\d*$`).Match([]byte(text))
 	}
 
-	errorMsgView := tview.NewTextView().
-		SetWrap(true).
-		SetWordWrap(true).
-		SetDynamicColors(true)
+	hostField := tview.NewInputField().
+		SetLabel("    Host: ").
+		SetText("test.mosquitto.org")
+	portField := tview.NewInputField().
+		SetLabel("    Port: ").
+		SetFieldWidth(numberFieldWidth).
+		SetText("1883")
+	usernameField := tview.NewInputField().
+		SetLabel("Username: ")
+	passwordField := tview.NewInputField().
+		SetLabel("Password: ").
+		SetMaskCharacter('*')
 
-	form := tview.NewForm()
-	form.AddInputField(hostLabel, host, textFieldWidth, nil, func(text string) {
-		host = text
-	})
+	fc := NewFocusChain(hostField, portField, usernameField, passwordField)
 
-	validatePort := func(text string, lastChar rune) bool {
-		var re = regexp.MustCompile(`^[1-9]\d*$`)
-		m := !re.Match([]byte(text))
-		if !m {
-			port = -1
-		}
+	connectButton := tview.NewButton("Connect").
+		SetSelectedFunc(func() {
+			host := hostField.GetText()
+			if host == "" {
+				ctrl.OnChangeFocus(fc.SetFocus(0))
+				return
+			}
 
-		return m
-	}
-	form.AddInputField(portLabel, fmt.Sprintf("%d", defaultPort), numberFieldWidth, validatePort, func(text string) {
-		port, _ = strconv.Atoi(text)
-	})
+			sport := portField.GetText()
+			if !validatePort(sport) {
+				ctrl.OnChangeFocus(fc.SetFocus(1))
+				return
+			}
+			port, _ := strconv.Atoi(sport)
 
-	form.AddInputField(usernameLabel, "", textFieldWidth, nil, func(text string) {
-		username = text
-	})
+			username := usernameField.GetText()
+			password := passwordField.GetText()
+			if usernameField.GetText() == "" && passwordField.GetText() != "" {
+				ctrl.OnChangeFocus(fc.SetFocus(2))
+				return
+			}
 
-	form.AddPasswordField(passwordLabel, "", textFieldWidth, '*', func(text string) {
-		password = text
-	})
-
-	form.AddButton("Connect", func() {
-		if host == "" {
-			form.SetFocus(form.GetFormItemIndex(hostLabel))
-			return
-		}
-		if port == -1 {
-			form.SetFocus(form.GetFormItemIndex(portLabel))
-			return
-		}
-		if username != "" && password == "" {
-			form.SetFocus(form.GetFormItemIndex(passwordLabel))
-			return
-		}
-		if username == "" && password != "" {
-			form.SetFocus(form.GetFormItemIndex(usernameLabel))
-			return
-		}
-
-		errorMsgView.Clear()
-		ctrl.OnConnect(host, port, username, password, func(err error) {
-			ctrl.QueueUpdate(func() {
-				if err != nil {
-					errorMsgView.SetText(fmt.Sprint("[red]Failed to connect:[-] ", err.Error()))
-					return
-				}
-
-				ctrl.OnConnected()
-			})
+			ctrl.OnConnect(host, port, username, password)
+			fc.Reset()
 		})
-	})
 
-	form.AddButton("Quit", func() {
-		ctrl.Stop()
-	})
+	cancelButton := tview.NewButton("Cancel").
+		SetSelectedFunc(func() {
+			ctrl.Cancel()
+		})
 
-	flex := tview.NewFlex().SetDirection(tview.FlexRow)
-	flex.SetTitle("Connection").SetBorder(true)
-	flex.AddItem(form, 0, 1, true).
-		AddItem(errorMsgView, 1, 0, false)
+	fc.Add(connectButton, cancelButton)
 
-	p.Flex = Center(flex, 1, 1)
-	return p
+	buttonFlex := Space(tview.FlexColumn, connectButton, cancelButton)
+	flex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(hostField, 1, 0, true).
+		AddItem(portField, 1, 0, false).
+		AddItem(usernameField, 1, 0, false).
+		AddItem(passwordField, 1, 0, false).
+		AddItem(tview.NewTextView(), 0, 1, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
+		AddItem(buttonFlex, 1, 0, false)
+
+	flex.SetTitle("Connect").SetBorder(true).
+		SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			switch event.Key() {
+			case tcell.KeyTab:
+				ctrl.OnChangeFocus(fc.Next())
+			case tcell.KeyBacktab:
+				ctrl.OnChangeFocus(fc.Prev())
+			}
+
+			return event
+		})
+
+	return &Connector{
+		Flex: Center(flex, 1, 1),
+	}
 }
