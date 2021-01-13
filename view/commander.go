@@ -54,13 +54,13 @@ func NewCommander(ctrl CommanderController) *Commander {
 	})
 
 	/* Controls column */
-	scrollToTopCheckbox := tview.NewCheckbox().
-		SetLabel("Scroll to top: ").
-		SetChangedFunc(func(checked bool) { c.scrollToBeginning = checked })
+	scrollToTopCheckbox := widget.NewPrettyCheckbox(). //tview.NewCheckbox().
+								SetLabel("Scroll to top").
+								SetChangedFunc(func(checked bool) { c.scrollToBeginning = checked })
 
-	followCheckbox := tview.NewCheckbox().
-		SetLabel("Follow: ").
-		SetChangedFunc(ctrl.OnSetFollow)
+	followCheckbox := widget.NewPrettyCheckbox(). // tview.NewCheckbox().
+							SetLabel("Follow").
+							SetChangedFunc(ctrl.OnSetFollow)
 
 	renderersView := NewDocumentRenderer().
 		SetRenderers([]model.Renderer{
@@ -133,11 +133,11 @@ func (c *Commander) SetDocumentStore(documents *model.DocumentStore) {
 func (c *Commander) SetConnectionStatus(s network.ConnectionStatus) {
 	switch s {
 	case network.StatusConnected:
-		c.connectionView.SetText("[green]CONNECTED[-]")
+		c.connectionView.SetText("Connection status: [green]CONNECTED[-]")
 	case network.StatusDisconnected:
-		c.connectionView.SetText("[red]DISCONNECTED[-]")
+		c.connectionView.SetText("Connection status: [red]DISCONNECTED[-]")
 	case network.StatusReconnecting:
-		c.connectionView.SetText("[yellow]RECONNECTING[-]")
+		c.connectionView.SetText("Connection status: [yellow]RECONNECTING[-]")
 	}
 }
 
