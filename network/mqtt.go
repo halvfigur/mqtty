@@ -182,7 +182,7 @@ func (c *MqttClient) handleConnectRequest(r *connectRequest) {
 }
 
 func (c *MqttClient) handlePublishRequest(r *publishRequest) {
-	if !c.c.IsConnected() {
+	if c.c == nil || !c.c.IsConnected() {
 		if r.onCompletion != nil {
 			r.onCompletion(errNotConnected)
 		}
@@ -199,7 +199,7 @@ func (c *MqttClient) handlePublishRequest(r *publishRequest) {
 }
 
 func (c *MqttClient) handleSubscribeRequest(r *subscribeRequest) {
-	if !c.c.IsConnected() {
+	if c.c == nil || !c.c.IsConnected() {
 		if r.onCompletion != nil {
 			r.onCompletion(errNotConnected)
 		}
@@ -214,7 +214,7 @@ func (c *MqttClient) handleSubscribeRequest(r *subscribeRequest) {
 }
 
 func (c *MqttClient) handleUnsubscribeRequest(r *unsubscribeRequest) {
-	if !c.c.IsConnected() {
+	if c.c == nil || !c.c.IsConnected() {
 		if r.onCompletion != nil {
 			r.onCompletion(errNotConnected)
 		}

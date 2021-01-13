@@ -47,31 +47,33 @@ func NewConnector(ctrl ConnectorController) *Connector {
 
 	fc := NewFocusChain(hostField, portField, usernameField, passwordField)
 
+	connect := func() {
+		host := hostField.GetText()
+		if host == "" {
+			ctrl.OnChangeFocus(fc.SetFocus(0))
+			return
+		}
+
+		sport := portField.GetText()
+		if !validatePort(sport) {
+			ctrl.OnChangeFocus(fc.SetFocus(1))
+			return
+		}
+		port, _ := strconv.Atoi(sport)
+
+		username := usernameField.GetText()
+		password := passwordField.GetText()
+		if usernameField.GetText() == "" && passwordField.GetText() != "" {
+			ctrl.OnChangeFocus(fc.SetFocus(2))
+			return
+		}
+
+		ctrl.OnConnect(host, port, username, password)
+		fc.Reset()
+	}
+
 	connectButton := tview.NewButton("Connect").
-		SetSelectedFunc(func() {
-			host := hostField.GetText()
-			if host == "" {
-				ctrl.OnChangeFocus(fc.SetFocus(0))
-				return
-			}
-
-			sport := portField.GetText()
-			if !validatePort(sport) {
-				ctrl.OnChangeFocus(fc.SetFocus(1))
-				return
-			}
-			port, _ := strconv.Atoi(sport)
-
-			username := usernameField.GetText()
-			password := passwordField.GetText()
-			if usernameField.GetText() == "" && passwordField.GetText() != "" {
-				ctrl.OnChangeFocus(fc.SetFocus(2))
-				return
-			}
-
-			ctrl.OnConnect(host, port, username, password)
-			fc.Reset()
-		})
+		SetSelectedFunc(connect)
 
 	cancelButton := tview.NewButton("Cancel").
 		SetSelectedFunc(func() {
@@ -98,12 +100,14 @@ func NewConnector(ctrl ConnectorController) *Connector {
 				ctrl.OnChangeFocus(fc.Next())
 			case tcell.KeyBacktab:
 				ctrl.OnChangeFocus(fc.Prev())
+			case tcell.KeyEnter:
+				connect()
 			}
 
 			return event
 		})
 
 	return &Connector{
-		Flex: Center(flex, 1, 1),
+		Flex: Center(flex, 100, 100),
 	}
 }

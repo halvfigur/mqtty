@@ -55,9 +55,10 @@ func NewPublish(ctrl PublishControl) *Publish {
 			ctrl.OnOpenHistory()
 		})
 	p.dataView = tview.NewTextView()
+	publishButton := tview.NewButton("Publish")
 
 	fc := NewFocusChain(topicField, qosDropDown, retainedCheckbox,
-		launchEditorButton, openFileButton, openHistoryButton)
+		launchEditorButton, openFileButton, openHistoryButton, publishButton)
 
 	publish := func() {
 		if topicField.GetText() == "" {
@@ -83,10 +84,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 		fc.Reset()
 	}
 
-	publishButton := Space(tview.FlexColumn, tview.NewButton("Publish").
-		SetSelectedFunc(publish))
-
-	fc.Add(publishButton)
+	publishButton.SetSelectedFunc(publish)
 
 	buttonFlex := Space(tview.FlexColumn, launchEditorButton, openFileButton, openHistoryButton)
 
@@ -99,6 +97,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 		AddItem(buttonFlex, 1, 0, false).
 		AddItem(widget.NewDivider().SetLabel("Data"), 1, 0, false).
 		AddItem(p.dataView, 0, 1, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(publishButton, 1, 1, false).
 		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(tview.NewTextView().
@@ -106,6 +105,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 			SetText("[blue](TAB):[-] navigate  [blue](^E):[-] launch editor  [blue](^F):[-] open file  [blue](^H):[-] open history  [blue](^P):[-] publish"),
 			1, 0, false)
 
+	flex = Center(flex, 300, 200)
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
@@ -127,7 +127,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 		return event
 	})
 
-	p.Flex = Center(flex, 3, 2)
+	p.Flex = flex
 	return p
 }
 

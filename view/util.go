@@ -42,13 +42,13 @@ func (c *FocusChain) Reset() tview.Primitive {
 
 func Center(p tview.Primitive, rowProportion, colProportion int) *tview.Flex {
 	cols := tview.NewFlex().SetDirection(tview.FlexColumn).
-		AddItem(nil, 0, 1, false).
+		AddItem(nil, 0, 100, false).
 		AddItem(p, 0, colProportion, true).
-		AddItem(nil, 0, 1, false)
+		AddItem(nil, 0, 100, false)
 	rows := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(nil, 0, 1, false).
+		AddItem(nil, 0, 100, false).
 		AddItem(cols, 0, rowProportion, true).
-		AddItem(nil, 0, 1, false)
+		AddItem(nil, 0, 100, false)
 
 	rows.SetBorder(true)
 	return rows

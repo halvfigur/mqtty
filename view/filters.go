@@ -124,7 +124,7 @@ func NewFilters(ctrl FiltersController) *Filters {
 	})
 
 	return &Filters{
-		Flex:    Center(viewFlex, 1, 1),
+		Flex:    Center(viewFlex, 100, 100),
 		filters: filterList,
 	}
 }

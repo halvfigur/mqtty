@@ -38,7 +38,7 @@ func NewPublish(ctrl Control) *Publish {
 	c.historyCtrl = NewPublishHistory(ctrl)
 
 	c.ctrl.Register(publishLabel, c.view, false)
-	c.ctrl.Register(openFileLabel, view.Center(c.fileView, 1, 1), false)
+	c.ctrl.Register(openFileLabel, view.Center(c.fileView, 100, 100), false)
 
 	return c
 }
@@ -90,9 +90,9 @@ func (c *Publish) readAndUpdateView(filename string) {
 
 func (c *Publish) OnPublish(topic string, qos network.Qos, retained bool, message []byte) {
 	c.ctrl.OnPublish(topic, qos, retained, message, func(err error) {
-		c.ctrl.QueueUpdate(func() {
+		c.ctrl.QueueUpdateDraw(func() {
 			if err != nil {
-				//TODO handle error
+				c.ctrl.OnDisplayError(err)
 				return
 			}
 			c.historyCtrl.AddDocument(topic, data.NewDocumentBytes(message))

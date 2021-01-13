@@ -188,13 +188,8 @@ func (a *MqttApp) Stop() {
 }
 
 func (a *MqttApp) Cancel() {
-	/*
-		name, _ := a.pages.GetFrontPage()
-		a.pages.HidePage(name)
-	*/
 	name, _ := a.pages.GetFrontPage()
 	a.pages.HidePage(name)
-	a.pages.SendToBack(name)
 }
 
 func (a *MqttApp) QueueUpdate(f func()) {
@@ -221,7 +216,8 @@ func (a *MqttApp) Start() {
 		}
 	}()
 
-	if err := a.app.Run(); err != nil {
+	err := a.app.Run()
+	if err != nil {
 		log.Fatal(err)
 	}
 }

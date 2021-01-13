@@ -81,7 +81,7 @@ func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentS
 	}).SetBorder(true).SetTitle("Topics")
 
 	return &PublishHistory{
-		Flex:         Center(flex, 5, 2),
+		Flex:         Center(flex, 500, 200),
 		ctrl:         ctrl,
 		documents:    documents,
 		topicList:    topicList,
