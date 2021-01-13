@@ -177,3 +177,13 @@ func (s *DocumentStore) Topics() []string {
 func (s *DocumentStore) Len() int {
 	return len(s.index)
 }
+
+func (s *DocumentStore) DocumentCount() int {
+	c := 0
+
+	for _, index := range s.index {
+		c += index.Len()
+	}
+
+	return c
+}

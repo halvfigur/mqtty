@@ -10,30 +10,29 @@ import (
 	"github.com/rivo/tview"
 )
 
-type (
-	CommanderController interface {
-		OnTopicSelected(t string)
-		OnChangeFocus(p tview.Primitive)
-		OnNextDocument()
-		OnPrevDocument()
-		OnConnect()
-		OnSubscribe()
-		OnPublish()
-		OnSetFollow(enabled bool)
-	}
+type CommanderController interface {
+	OnTopicSelected(t string)
+	OnChangeFocus(p tview.Primitive)
+	OnNextDocument()
+	OnPrevDocument()
+	OnConnect()
+	OnSubscribe()
+	OnPublish()
+	OnSetFollow(enabled bool)
+}
 
-	Commander struct {
-		*tview.Flex
-		ctrl CommanderController
+type Commander struct {
+	*tview.Flex
+	ctrl CommanderController
 
-		topicsList     *tview.List
-		documentView   *Document
-		connectionView *tview.TextView
+	topicsList     *tview.List
+	documentView   *Document
+	connectionView *tview.TextView
+	storeView      *tview.TextView
 
-		documents         *model.DocumentStore
-		scrollToBeginning bool
-	}
-)
+	documents         *model.DocumentStore
+	scrollToBeginning bool
+}
 
 func NewCommander(ctrl CommanderController) *Commander {
 	c := &Commander{
@@ -73,6 +72,9 @@ func NewCommander(ctrl CommanderController) *Commander {
 			c.Refresh()
 		})
 
+	c.storeView = tview.NewTextView()
+	c.updateStoreView()
+
 	c.connectionView = tview.NewTextView().
 		SetDynamicColors(true)
 
@@ -81,6 +83,8 @@ func NewCommander(ctrl CommanderController) *Commander {
 		AddItem(renderersView, 0, 1, false).
 		AddItem(scrollToTopCheckbox, 1, 0, false).
 		AddItem(followCheckbox, 1, 0, false).
+		AddItem(widget.NewDivider(), 1, 0, false).
+		AddItem(c.storeView, 2, 0, false).
 		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(c.connectionView, 1, 0, false)
 
@@ -165,6 +169,18 @@ func (c *Commander) AddTopic(t string) {
 	c.topicsList.AddItem(t, secondaryText, shortCut, nil)
 }
 
+func (c *Commander) updateStoreView() {
+	topics := 0
+	documents := 0
+
+	if c.documents != nil {
+		topics = c.documents.Len()
+		documents = c.documents.DocumentCount()
+	}
+
+	c.storeView.SetText(fmt.Sprintf("Topics:    %5d\nDocuments: %5d", topics, documents))
+}
+
 func (c *Commander) setDocumentTitle(title string) {
 	c.documentView.SetTitle(title)
 }
@@ -174,9 +190,9 @@ func (c *Commander) setTopicsTitle(title string) {
 }
 
 func (c *Commander) Refresh() {
-	t, index := c.documents.Current()
-	//c.setTopicsTitle(fmt.Sprintf("Topics %d", c.documents.Len()))
 	c.setTopicsTitle(fmt.Sprintf("Topic %d/%d", c.topicsList.GetCurrentItem()+1, c.topicsList.GetItemCount()))
+
+	t, index := c.documents.Current()
 	if index == nil {
 		c.setDocumentTitle("Document (none)")
 		return
@@ -191,4 +207,5 @@ func (c *Commander) Refresh() {
 		c.documentView.ScrollToBeginning()
 	}
 
+	c.updateStoreView()
 }
