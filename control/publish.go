@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/atotto/clipboard"
 	"github.com/rivo/tview"
 
 	"github.com/halvfigur/mqtty/data"
@@ -54,7 +55,7 @@ func (c *Publish) Register(label string, p tview.Primitive, visible bool) {
 func (c *Publish) OnLaunchEditor() {
 	filename, err := c.ctrl.OnLaunchEditor()
 	if err != nil {
-		// Handle error
+		c.ctrl.OnDisplayError(err)
 		return
 	}
 	defer os.Remove(filename)
@@ -74,6 +75,16 @@ func (c *Publish) OnFileSelected(filename string) {
 
 func (c *Publish) OnOpenHistory() {
 	c.ctrl.OnDisplayPublishHistory()
+}
+
+func (c *Publish) OnPaste() {
+	data, err := clipboard.ReadAll()
+	if err != nil {
+		c.ctrl.OnDisplayError(err)
+		return
+	}
+
+	c.view.SetData([]byte(data))
 }
 
 func (c *Publish) OnError(err error) {

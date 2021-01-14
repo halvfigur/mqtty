@@ -1,6 +1,7 @@
 package control
 
 import (
+	"github.com/atotto/clipboard"
 	"github.com/rivo/tview"
 
 	"github.com/halvfigur/mqtty/data"
@@ -71,6 +72,19 @@ func (c *CommanderController) OnSubscribe() {
 
 func (c *CommanderController) OnPublish() {
 	c.ctrl.OnDisplayPublisher()
+}
+
+func (c *CommanderController) OnCopy() {
+	_, index := c.documents.Current()
+
+	doc := data.NewDocumentEmpty()
+	if index != nil {
+		_, doc = index.Current()
+	}
+
+	if err := clipboard.WriteAll(string(doc.Contents())); err != nil {
+		c.ctrl.OnDisplayError(err)
+	}
 }
 
 func (c *CommanderController) OnSetScrollToTop(enabled bool) {

@@ -14,6 +14,7 @@ type (
 		OnLaunchEditor()
 		OnOpenFile()
 		OnOpenHistory()
+		OnPaste()
 		OnPublish(topic string, qos network.Qos, retained bool, message []byte)
 		Cancel()
 	}
@@ -36,9 +37,9 @@ func NewPublish(ctrl PublishControl) *Publish {
 	}
 
 	topicField := tview.NewInputField().
-		SetLabel("Topic:    ")
+		SetLabel("   Topic: ")
 	qosDropDown := tview.NewDropDown().
-		SetLabel("Qos:      ").
+		SetLabel("     Qos: ").
 		SetOptions([]string{"At least once", "At most once", "Exactly once"}, nil)
 	retainedCheckbox := tview.NewCheckbox().
 		SetLabel("Retained: ")
@@ -54,11 +55,15 @@ func NewPublish(ctrl PublishControl) *Publish {
 		SetSelectedFunc(func() {
 			ctrl.OnOpenHistory()
 		})
+	pasteButton := tview.NewButton("Paste").
+		SetSelectedFunc(func() {
+			ctrl.OnPaste()
+		})
 	p.dataView = tview.NewTextView()
 	publishButton := tview.NewButton("Publish")
 
 	fc := NewFocusChain(topicField, qosDropDown, retainedCheckbox,
-		launchEditorButton, openFileButton, openHistoryButton, publishButton)
+		launchEditorButton, openFileButton, openHistoryButton, pasteButton, publishButton)
 
 	publish := func() {
 		if topicField.GetText() == "" {
@@ -86,7 +91,8 @@ func NewPublish(ctrl PublishControl) *Publish {
 
 	publishButton.SetSelectedFunc(publish)
 
-	buttonFlex := Space(tview.FlexColumn, launchEditorButton, openFileButton, openHistoryButton)
+	buttonFlex := Space(tview.FlexColumn, launchEditorButton, openFileButton,
+		openHistoryButton, pasteButton)
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	flex.SetTitle("Publish").SetBorder(true)
@@ -102,7 +108,7 @@ func NewPublish(ctrl PublishControl) *Publish {
 		AddItem(widget.NewDivider(), 1, 0, false).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] navigate  [blue](^E):[-] launch editor  [blue](^F):[-] open file  [blue](^H):[-] open history  [blue](^P):[-] publish"),
+			SetText("[blue](TAB):[-] Navigate  [blue](^E):[-] Editor  [blue](^F):[-] File  [blue](^H):[-] History  [blue](^Y):[-] Paste  [blue](^P):[-] Publish"),
 			1, 0, false)
 
 	flex = Center(flex, 300, 200)
@@ -120,6 +126,8 @@ func NewPublish(ctrl PublishControl) *Publish {
 			ctrl.OnOpenFile()
 		case tcell.KeyCtrlH:
 			ctrl.OnOpenHistory()
+		case tcell.KeyCtrlY:
+			ctrl.OnPaste()
 		case tcell.KeyCtrlP:
 			publish()
 		}

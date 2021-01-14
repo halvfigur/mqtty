@@ -19,6 +19,7 @@ type CommanderController interface {
 	OnSubscribe()
 	OnPublish()
 	OnSetFollow(enabled bool)
+	OnCopy()
 }
 
 type Commander struct {
@@ -120,6 +121,8 @@ func NewCommander(ctrl CommanderController) *Commander {
 			c.ctrl.OnSubscribe()
 		case tcell.KeyCtrlP:
 			c.ctrl.OnPublish()
+		case tcell.KeyCtrlA:
+			c.ctrl.OnCopy()
 		}
 
 		return event
@@ -130,7 +133,7 @@ func NewCommander(ctrl CommanderController) *Commander {
 		AddItem(columnsFlex, 0, 3, true).
 		AddItem(tview.NewTextView().
 			SetDynamicColors(true).
-			SetText("[blue](TAB):[-] Navigate  [blue](^O):[-] Open connection  [blue](^F):[-] Filters  [blue](^P):[-] Publish  [blue](^C):[-] Terminate"),
+			SetText("[blue](TAB):[-] Navigate  [blue](^O):[-] Open connection  [blue](^F):[-] Filters  [blue](^P):[-] Publish  [blue](^A):[-] Copy  [blue](^C):[-] Terminate"),
 			1, 0, false)
 
 	return c
