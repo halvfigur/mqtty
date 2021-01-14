@@ -40,7 +40,11 @@ func NewFilters(ctrl FiltersController) *Filters {
 		SetCurrentOption(0)
 	qosDropDown.SetBorderPadding(1, 1, 1, 1)
 
-	fc := NewFocusChain(filterInput, qosDropDown)
+	addButton := tview.NewButton("Add")
+	clearButton := tview.NewButton("Clear")
+	filterList := tview.NewList()
+
+	fc := NewFocusChain(filterInput, qosDropDown, addButton, clearButton, filterList)
 
 	subscribe := func() {
 		defer ctrl.OnChangeFocus(fc.Reset())
@@ -71,7 +75,6 @@ func NewFilters(ctrl FiltersController) *Filters {
 		AddItem(filterInput, 0, 5, true).
 		AddItem(qosDropDown, 0, 5, false)
 
-	filterList := tview.NewList()
 	filterList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyDelete:
@@ -83,11 +86,11 @@ func NewFilters(ctrl FiltersController) *Filters {
 		return event
 	})
 
-	addButton := tview.NewButton("Add").SetSelectedFunc(func() {
+	addButton.SetSelectedFunc(func() {
 		subscribe()
 	})
 
-	clearButton := tview.NewButton("Clear").SetSelectedFunc(func() {
+	clearButton.SetSelectedFunc(func() {
 		filterInput.SetText("")
 		qosDropDown.SetCurrentOption(0)
 		ctrl.OnChangeFocus(fc.Reset())
@@ -104,7 +107,6 @@ func NewFilters(ctrl FiltersController) *Filters {
 		AddItem(buttonFlex, 1, 0, false)
 
 	viewFlex.SetTitle("Filters").SetBorder(true)
-	fc.Add(addButton, clearButton, filterList)
 
 	viewFlex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
