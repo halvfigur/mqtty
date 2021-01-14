@@ -1,5 +1,5 @@
 # Mqtty
-Mqtty is a small TUI utility for subscribing to and publish MQTT messages.
+Mqtty is a small TUI utility for subscribing to and publishing MQTT messages.
 
 ![Screenshot](commander.png)
 
