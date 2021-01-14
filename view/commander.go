@@ -53,19 +53,25 @@ func NewCommander(ctrl CommanderController) *Commander {
 	})
 
 	/* Controls column */
-	scrollToTopCheckbox := widget.NewPrettyCheckbox(). //tview.NewCheckbox().
-								SetLabel("Scroll to top").
-								SetChangedFunc(func(checked bool) { c.scrollToBeginning = checked })
+	scrollToTopCheckbox := widget.NewPrettyCheckbox().
+		SetLabel("Scroll to top").
+		SetChangedFunc(func(checked bool) {
+			c.scrollToBeginning = checked
+			if checked {
+				c.documentView.ScrollToBeginning()
+			}
+		})
 
-	followCheckbox := widget.NewPrettyCheckbox(). // tview.NewCheckbox().
-							SetLabel("Follow").
-							SetChangedFunc(ctrl.OnSetFollow)
+	followCheckbox := widget.NewPrettyCheckbox().
+		SetLabel("Follow").
+		SetChangedFunc(ctrl.OnSetFollow)
 
 	renderersView := NewDocumentRenderer().
 		SetRenderers([]model.Renderer{
 			model.NewRawRenderer(),
 			model.NewHexRenderer(),
 			model.NewJsonRenderer(),
+			model.NewJsonFlatRenderer(),
 		}).
 		SetSelectedFunc(func(renderer model.Renderer) {
 			c.documentView.SetRenderer(renderer)
