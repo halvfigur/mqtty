@@ -44,6 +44,10 @@ func NewPublish(ctrl Control) *Publish {
 	return c
 }
 
+func (c *Publish) AddDocument(topic string, doc *data.Document) {
+	c.historyCtrl.AddDocument(topic, doc)
+}
+
 func (c *Publish) OnChangeFocus(p tview.Primitive) {
 	c.ctrl.Focus(p)
 }
@@ -93,26 +97,14 @@ func (c *Publish) OnError(err error) {
 func (c *Publish) readAndUpdateView(filename string) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		// Handle error
+		c.ctrl.OnDisplayError(err)
 	}
 
 	c.view.SetData(data)
 }
 
 func (c *Publish) OnPublish(topic string, qos network.Qos, retained bool, message []byte) {
-	c.ctrl.OnPublish(topic, qos, retained, message, func(err error) {
-		c.ctrl.QueueUpdateDraw(func() {
-			if err != nil {
-				c.ctrl.OnDisplayError(err)
-				return
-			}
-			c.historyCtrl.AddDocument(topic, data.NewDocumentBytes(message))
-		})
-	})
-}
-
-func (c *Publish) QueueUpdate(f func()) {
-	c.ctrl.QueueUpdate(f)
+	c.ctrl.OnPublish(topic, qos, retained, message)
 }
 
 func (c *Publish) Cancel() {

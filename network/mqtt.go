@@ -250,6 +250,10 @@ func (c *MqttClient) Connect(host string, port int, username, password string, o
 	}
 }
 
+func (c *MqttClient) IsConnected() bool {
+	return c.c != nil && c.c.IsConnected()
+}
+
 func (c *MqttClient) Subscribe(topic string, qos Qos, onCompletion func(error)) {
 	c.requests <- &subscribeRequest{
 		topic:        topic,

@@ -28,8 +28,7 @@ type (
 func NewFilters(ctrl FiltersController) *Filters {
 	filterInput := tview.NewInputField().
 		SetLabel("Filter: ").
-		SetFieldWidth(filterMaxWidth).
-		SetText("hamweather/#")
+		SetFieldWidth(filterMaxWidth)
 	filterInput.SetBorderPadding(1, 1, 1, 1)
 
 	qosOpts := []string{"At most once", "At least once", "Exatly once"}

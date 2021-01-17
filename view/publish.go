@@ -40,8 +40,9 @@ func NewPublish(ctrl PublishControl) *Publish {
 		SetLabel("   Topic: ")
 	qosDropDown := tview.NewDropDown().
 		SetLabel("     Qos: ").
-		SetOptions([]string{"At least once", "At most once", "Exactly once"}, nil)
-	retainedCheckbox := tview.NewCheckbox().
+		SetOptions([]string{"At least once", "At most once", "Exactly once"}, nil).
+		SetCurrentOption(0)
+	retainedCheckbox := widget.NewPrettyCheckbox().
 		SetLabel("Retained: ")
 	launchEditorButton := tview.NewButton("Launch editor").
 		SetSelectedFunc(func() {

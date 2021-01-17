@@ -4,11 +4,11 @@ import (
 	"github.com/rivo/tview"
 )
 
-type ErrorModalControl interface {
+type ModalControl interface {
 	Cancel()
 }
 
-func NewErrorModal(ctrl ErrorModalControl) *tview.Modal {
+func NewErrorModal(ctrl ModalControl) *tview.Modal {
 	m := tview.NewModal().
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(index int, label string) {
@@ -16,6 +16,14 @@ func NewErrorModal(ctrl ErrorModalControl) *tview.Modal {
 		})
 
 	m.SetTitle("Error").SetBorder(true)
+
+	return m
+}
+
+func NewWaitModal() *tview.Modal {
+	m := tview.NewModal()
+
+	m.SetTitle("...").SetBorder(true)
 
 	return m
 }

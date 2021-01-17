@@ -24,24 +24,11 @@ func NewConnector(ctrl Control) *Connector {
 }
 
 func (c *Connector) OnConnect(host string, port int, username, password string) {
-	c.ctrl.OnConnect(host, port, username, password, func(err error) {
-		c.ctrl.QueueUpdateDraw(func() {
-			if err != nil {
-				c.ctrl.OnDisplayError(err)
-				return
-			}
-
-			c.ctrl.Cancel()
-		})
-	})
+	c.ctrl.OnConnect(host, port, username, password)
 }
 
 func (c *Connector) OnChangeFocus(p tview.Primitive) {
 	c.ctrl.Focus(p)
-}
-
-func (c *Connector) QueueUpdate(f func()) {
-	c.ctrl.QueueUpdate(f)
 }
 
 func (c *Connector) Cancel() {

@@ -44,6 +44,18 @@ func (c *CommanderController) AddDocument(t string, d *data.Document) {
 	c.mainView.Refresh()
 }
 
+func (c *CommanderController) AddFilter(f string, qos network.Qos) {
+	c.filtersCtrl.AddFilter(f, qos)
+}
+
+func (c *CommanderController) RemoveFilter(f string) {
+	c.filtersCtrl.RemoveFilter(f)
+}
+
+func (c *CommanderController) AddPublishedDocument(topic string, doc *data.Document) {
+	c.publishCtrl.AddDocument(topic, doc)
+}
+
 func (c *CommanderController) SetConnectionStatus(s network.ConnectionStatus) {
 	c.mainView.SetConnectionStatus(s)
 }
@@ -55,6 +67,7 @@ func (c *CommanderController) OnTopicSelected(t string) {
 
 func (c *CommanderController) OnChangeFocus(p tview.Primitive) {
 	c.ctrl.Focus(p)
+	c.mainView.Refresh()
 }
 
 func (c *CommanderController) OnNextDocument() {

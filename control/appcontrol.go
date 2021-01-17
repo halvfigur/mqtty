@@ -23,9 +23,16 @@ const (
 	publishHistoryLabel = "publishhistory"
 	openFileLabel       = "openfile"
 	errorLabel          = "error"
+	waitLabel           = "wait"
 )
 
 type (
+	Config struct {
+		Server string
+		Port   int
+		Topics []string
+	}
+
 	AppController interface {
 		OnLaunchEditor() (string, error)
 		QueueUpdate(func())
@@ -34,10 +41,10 @@ type (
 	}
 
 	MqttController interface {
-		OnConnect(host string, port int, username, password string, onCompletion func(error))
-		OnSubscribe(topic string, qos network.Qos, onCompletion func(error))
-		OnUnsubscribe(topic string, onCompletion func(error))
-		OnPublish(topic string, qos network.Qos, retained bool, message []byte, onCompletion func(error))
+		OnConnect(server string, port int, username, password string)
+		OnSubscribe(topic string, qos network.Qos)
+		OnUnsubscribe(topic string)
+		OnPublish(topic string, qos network.Qos, retained bool, message []byte)
 	}
 
 	ViewController interface {
@@ -48,6 +55,7 @@ type (
 		OnDisplayPublishHistory()
 		OnDisplayOpenFile()
 		OnDisplayError(err error)
+		OnDisplayWait(msg string)
 
 		Register(pageLabel string, p tview.Primitive, visible bool)
 		Hide(pageLabel string)
@@ -63,26 +71,31 @@ type (
 
 	MqttApp struct {
 		c          *network.MqttClient
+		conf       Config
 		app        *tview.Application
 		pages      *tview.Pages
 		errorModal *tview.Modal
+		waitModal  *tview.Modal
 		main       *CommanderController
 	}
 )
 
-func NewMqttApp(c *network.MqttClient) *MqttApp {
+func NewMqttApp(c *network.MqttClient, conf Config) *MqttApp {
 	tview.Styles.TitleColor = tcell.ColorBlue
 	app := tview.NewApplication()
 
 	u := &MqttApp{
 		c:     c,
+		conf:  conf,
 		app:   app,
 		pages: tview.NewPages(),
 	}
 
 	u.errorModal = view.NewErrorModal(u)
+	u.waitModal = view.NewWaitModal()
 
 	u.Register(errorLabel, u.errorModal, false)
+	u.Register(waitLabel, u.waitModal, false)
 
 	u.main = NewCommanderController(u)
 
@@ -95,20 +108,61 @@ func NewMqttApp(c *network.MqttClient) *MqttApp {
 	return u
 }
 
-func (a *MqttApp) OnConnect(host string, port int, username, password string, onCompletion func(error)) {
-	a.c.Connect(fmt.Sprintf("tcp://%s", host), port, username, password, onCompletion)
+func (a *MqttApp) OnConnect(server string, port int, username, password string) {
+	a.OnDisplayWait(fmt.Sprint("Connecting to ", a.conf.Server))
+	a.c.Connect(server, port, username, password, func(err error) {
+		a.QueueUpdateDraw(func() {
+			a.OnDisplayCommander()
+
+			if err != nil {
+				a.main.SetConnectionStatus(network.StatusDisconnected)
+				a.OnDisplayError(err)
+			}
+
+			a.main.SetConnectionStatus(network.StatusConnected)
+		})
+	})
 }
 
-func (a *MqttApp) OnSubscribe(filter string, qos network.Qos, onCompletion func(error)) {
-	a.c.Subscribe(filter, qos, onCompletion)
+func (a *MqttApp) OnSubscribe(filter string, qos network.Qos) {
+	a.c.Subscribe(filter, qos, func(err error) {
+		a.OnDisplayWait(fmt.Sprint("Subscribing to ", filter))
+		a.app.QueueUpdateDraw(func() {
+			// Hide wait modal
+			a.Cancel()
+			if err != nil {
+				a.OnDisplayError(err)
+				return
+			}
+
+			a.main.AddFilter(filter, qos)
+		})
+	})
 }
 
-func (a *MqttApp) OnUnsubscribe(filter string, onCompletion func(error)) {
-	a.c.Unsubscribe(filter, onCompletion)
+func (a *MqttApp) OnUnsubscribe(filter string) {
+	a.c.Unsubscribe(filter, func(err error) {
+		a.app.QueueUpdateDraw(func() {
+			if err != nil {
+				a.OnDisplayError(err)
+				return
+			}
+
+			a.main.RemoveFilter(filter)
+		})
+	})
 }
 
-func (a *MqttApp) OnPublish(topic string, qos network.Qos, retained bool, message []byte, onCompletion func(error)) {
-	a.c.Publish(topic, qos, retained, message, onCompletion)
+func (a *MqttApp) OnPublish(topic string, qos network.Qos, retained bool, message []byte) {
+	a.c.Publish(topic, qos, retained, message, func(err error) {
+		a.QueueUpdateDraw(func() {
+			if err != nil {
+				a.OnDisplayError(err)
+				return
+			}
+			a.main.AddPublishedDocument(topic, data.NewDocumentBytes(message))
+		})
+	})
 }
 
 func (a *MqttApp) Register(pageLabel string, p tview.Primitive, visible bool) {
@@ -147,6 +201,11 @@ func (a *MqttApp) OnDisplayOpenFile() {
 func (a *MqttApp) OnDisplayError(err error) {
 	a.errorModal.SetText(err.Error())
 	a.display(errorLabel)
+}
+
+func (a *MqttApp) OnDisplayWait(msg string) {
+	a.waitModal.SetText(msg)
+	a.display(waitLabel)
 }
 
 func (a *MqttApp) Hide(pageLabel string) {
@@ -205,6 +264,28 @@ func (a *MqttApp) Start() {
 	a.OnDisplayCommander()
 
 	a.app.SetRoot(a.pages, true)
+
+	if a.conf.Server != "" {
+		a.c.Connect(a.conf.Server, a.conf.Port, "", "", func(err error) {
+			if err != nil {
+				a.OnDisplayError(err)
+				return
+			}
+
+			for _, f := range a.conf.Topics {
+				a.c.Subscribe(f, network.QosAtMostOnce, func(err error) {
+					a.QueueUpdateDraw(func() {
+						if err != nil {
+							a.OnDisplayError(err)
+							return
+						}
+
+						a.main.AddFilter(f, network.QosAtMostOnce)
+					})
+				})
+			}
+		})
+	}
 
 	go func() {
 		/* This goroutine will exit when the incomming channel is closed */

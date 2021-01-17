@@ -26,32 +26,22 @@ func NewFilters(ctrl Control) *Filters {
 	return f
 }
 
-func (f *Filters) OnSubscribe(topic string, qos network.Qos) {
-	f.ctrl.OnSubscribe(topic, qos, func(err error) {
-		f.ctrl.QueueUpdateDraw(func() {
-			if err != nil {
-				f.ctrl.OnDisplayError(err)
-				return
-			}
+func (f *Filters) AddFilter(filter string, qos network.Qos) {
+	f.filters.Add(model.NewSubscriptionFilter(filter, qos))
+	f.view.SetSubscriptionFilters(f.filters)
+}
 
-			f.filters.Add(model.NewSubscriptionFilter(topic, qos))
-			f.view.SetSubscriptionFilters(f.filters)
-		})
-	})
+func (f *Filters) RemoveFilter(filter string) {
+	f.filters.Remove(filter)
+	f.view.SetSubscriptionFilters(f.filters)
+}
+
+func (f *Filters) OnSubscribe(topic string, qos network.Qos) {
+	f.ctrl.OnSubscribe(topic, qos)
 }
 
 func (f *Filters) OnUnsubscribe(topic string) {
-	f.ctrl.OnUnsubscribe(topic, func(err error) {
-		f.ctrl.QueueUpdateDraw(func() {
-			if err != nil {
-				f.ctrl.OnDisplayError(err)
-				return
-			}
-
-			f.filters.Remove(topic)
-			f.view.SetSubscriptionFilters(f.filters)
-		})
-	})
+	f.ctrl.OnUnsubscribe(topic)
 }
 
 func (f *Filters) Cancel() {

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 
@@ -12,7 +13,7 @@ import (
 type (
 	ConnectorController interface {
 		OnChangeFocus(p tview.Primitive)
-		OnConnect(host string, port int, username, password string)
+		OnConnect(server string, port int, username, password string)
 		Cancel()
 	}
 
@@ -32,9 +33,12 @@ func NewConnector(ctrl ConnectorController) *Connector {
 		return regexp.MustCompile(`^[1-9]\d*$`).Match([]byte(text))
 	}
 
+	schemeDropDown := tview.NewDropDown().
+		SetLabel("  Scheme: ").
+		SetOptions([]string{"tcp", "ssl", "ws"}, nil).
+		SetCurrentOption(0)
 	hostField := tview.NewInputField().
-		SetLabel("    Host: ").
-		SetText("test.mosquitto.org")
+		SetLabel("    Host: ")
 	portField := tview.NewInputField().
 		SetLabel("    Port: ").
 		SetFieldWidth(numberFieldWidth).
@@ -47,9 +51,10 @@ func NewConnector(ctrl ConnectorController) *Connector {
 	connectButton := tview.NewButton("Connect")
 	cancelButton := tview.NewButton("Cancel")
 
-	fc := NewFocusChain(hostField, portField, usernameField, passwordField, connectButton, cancelButton)
+	fc := NewFocusChain(schemeDropDown, hostField, portField, usernameField, passwordField, connectButton, cancelButton)
 
 	connectButton.SetSelectedFunc(func() {
+		_, scheme := schemeDropDown.GetCurrentOption()
 		host := hostField.GetText()
 		if host == "" {
 			ctrl.OnChangeFocus(fc.SetFocus(0))
@@ -70,7 +75,7 @@ func NewConnector(ctrl ConnectorController) *Connector {
 			return
 		}
 
-		ctrl.OnConnect(host, port, username, password)
+		ctrl.OnConnect(fmt.Sprintf("%s://%s", scheme, host), port, username, password)
 		fc.Reset()
 	})
 	cancelButton.SetSelectedFunc(ctrl.Cancel)
@@ -78,6 +83,7 @@ func NewConnector(ctrl ConnectorController) *Connector {
 	buttonFlex := Space(tview.FlexColumn, connectButton, cancelButton)
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
+		AddItem(schemeDropDown, 1, 0, false).
 		AddItem(hostField, 1, 0, true).
 		AddItem(portField, 1, 0, false).
 		AddItem(usernameField, 1, 0, false).
@@ -93,6 +99,8 @@ func NewConnector(ctrl ConnectorController) *Connector {
 				ctrl.OnChangeFocus(fc.Next())
 			case tcell.KeyBacktab:
 				ctrl.OnChangeFocus(fc.Prev())
+			case tcell.KeyEscape:
+				ctrl.Cancel()
 			}
 
 			return event

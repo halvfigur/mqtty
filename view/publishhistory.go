@@ -76,6 +76,8 @@ func NewPublishHistory(ctrl PublishHistoryController, documents *model.DocumentS
 			ctrl.OnNextDocument()
 		case tcell.KeyLeft:
 			ctrl.OnPrevDocument()
+		case tcell.KeyEscape:
+			ctrl.Cancel()
 		}
 		return event
 	}).SetBorder(true).SetTitle("Topics")
