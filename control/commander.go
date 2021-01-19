@@ -77,6 +77,7 @@ func (c *CommanderController) OnNextDocument() {
 
 func (c *CommanderController) OnPrevDocument() {
 	c.documents.Prev()
+	c.mainView.Refresh()
 }
 
 func (c *CommanderController) OnSubscribe() {
